@@ -26,6 +26,8 @@ backend/
 │   ├── contact.js
 │   ├── news.js
 │   └── products.js
+├── scripts/               # 脚本文件
+│   └── seedTestData.js   # 测试数据填充脚本
 └── README.md              # 后端说明文档
 ```
 
@@ -72,7 +74,15 @@ npm install
 运行以下命令初始化数据库表：
 
 ```bash
-npm run init:db
+npm run init-db
+```
+
+## 填充测试数据
+
+运行以下命令向数据库中添加云产品相关的测试数据：
+
+```bash
+npm run seed-test-data
 ```
 
 ## 启动服务
@@ -80,16 +90,11 @@ npm run init:db
 ### 开发环境
 
 ```bash
-# 启动前端开发服务器
 npm run dev
-
-# 启动后端服务器（新终端中运行）
-npm run dev:server
 ```
 
 ### 生产环境
 
 ```bash
-# 启动后端服务器
 npm start
 ```
