@@ -90,9 +90,6 @@ npm run dev:server
 ### 生产环境
 
 ```bash
-# 构建前端项目
-npm run build
-
 # 启动后端服务器
 npm start
 ```
