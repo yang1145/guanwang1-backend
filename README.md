@@ -64,6 +64,13 @@ npm install
 - `GET /api/contact` - 获取所有联系信息（管理接口）
 - `GET /api/contact/:id` - 获取特定联系信息（管理接口）
 
+### 用户管理接口
+
+- `GET /api/users` - 获取所有用户列表（管理接口）
+- `GET /api/users/:id` - 获取特定用户信息（管理接口）
+- `PUT /api/users/:id` - 更新用户信息（管理接口）
+- `DELETE /api/users/:id` - 删除用户（管理接口）
+
 ## 环境配置
 
 1. 复制 [.env.example](../.env.example) 文件并重命名为 `.env`

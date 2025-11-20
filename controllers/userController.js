@@ -118,7 +118,120 @@ const login = async (req, res) => {
   }
 };
 
+// 获取用户列表（管理员接口）
+const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.getAll();
+    
+    res.json({
+      message: '用户列表获取成功',
+      data: users
+    });
+  } catch (error) {
+    console.error('获取用户列表时出错: ' + error.stack);
+    res.status(500).json({ error: '获取用户列表失败' });
+  }
+};
+
+// 获取特定用户信息（管理员接口）
+const getUserById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.getById(id);
+    
+    if (!user) {
+      return res.status(404).json({ error: '用户不存在' });
+    }
+    
+    res.json({
+      message: '用户信息获取成功',
+      data: user
+    });
+  } catch (error) {
+    console.error('获取用户信息时出错: ' + error.stack);
+    res.status(500).json({ error: '获取用户信息失败' });
+  }
+};
+
+// 更新用户信息（管理员接口）
+const updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { phone, email } = req.body;
+    
+    // 检查用户是否存在
+    const existingUser = await User.getById(id);
+    if (!existingUser) {
+      return res.status(404).json({ error: '用户不存在' });
+    }
+    
+    // 检查手机号格式
+    if (phone) {
+      const phoneRegex = /^1[3-9]\d{9}$/;
+      if (!phoneRegex.test(phone)) {
+        return res.status(400).json({ error: '手机号格式不正确' });
+      }
+    }
+    
+    // 检查邮箱格式
+    if (email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ error: '邮箱格式不正确' });
+      }
+    }
+    
+    const result = await User.update(id, { phone, email });
+    
+    if (result === 0) {
+      return res.status(400).json({ error: '更新用户信息失败' });
+    }
+    
+    // 获取更新后的用户信息
+    const updatedUser = await User.getById(id);
+    
+    res.json({
+      message: '用户信息更新成功',
+      data: updatedUser
+    });
+  } catch (error) {
+    console.error('更新用户信息时出错: ' + error.stack);
+    res.status(500).json({ error: '更新用户信息失败' });
+  }
+};
+
+// 删除用户（管理员接口）
+const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // 检查用户是否存在
+    const existingUser = await User.getById(id);
+    if (!existingUser) {
+      return res.status(404).json({ error: '用户不存在' });
+    }
+    
+    const result = await User.delete(id);
+    
+    if (result === 0) {
+      return res.status(400).json({ error: '删除用户失败' });
+    }
+    
+    res.json({
+      message: '用户删除成功',
+      data: { id: parseInt(id) }
+    });
+  } catch (error) {
+    console.error('删除用户时出错: ' + error.stack);
+    res.status(500).json({ error: '删除用户失败' });
+  }
+};
+
 module.exports = {
   register,
-  login
+  login,
+  getAllUsers,
+  getUserById,
+  updateUser,
+  deleteUser
 };

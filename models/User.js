@@ -53,6 +53,34 @@ class User {
   static async validatePassword(inputPassword, hashedPassword) {
     return await bcrypt.compare(inputPassword, hashedPassword);
   }
+
+  // 获取所有用户（供管理员使用）
+  static async getAll() {
+    const [rows] = await db.query('SELECT id, phone, email, created_at FROM users ORDER BY created_at DESC');
+    return rows;
+  }
+
+  // 根据ID获取用户（不含密码）
+  static async getById(id) {
+    const [rows] = await db.query('SELECT id, phone, email, created_at FROM users WHERE id = ?', [id]);
+    return rows[0];
+  }
+
+  // 更新用户信息
+  static async update(id, userData) {
+    const { phone, email } = userData;
+    const [result] = await db.query(
+      'UPDATE users SET phone = ?, email = ? WHERE id = ?',
+      [phone, email, id]
+    );
+    return result.affectedRows;
+  }
+
+  // 删除用户
+  static async delete(id) {
+    const [result] = await db.query('DELETE FROM users WHERE id = ?', [id]);
+    return result.affectedRows;
+  }
 }
 
 module.exports = User;
