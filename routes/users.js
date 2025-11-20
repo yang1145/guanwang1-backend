@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { register, login, getAllUsers, getUserById, updateUser, deleteUser } = require('../controllers/userController');
+const { register, login, getAllUsers, getUserById, updateUser, deleteUser, getUserCount } = require('../controllers/userController');
 const adminAuth = require('../middleware/adminAuth');
 
 // 用户注册
