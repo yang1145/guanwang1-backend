@@ -227,11 +227,27 @@ const deleteUser = async (req, res) => {
   }
 };
 
+// 获取用户总数（管理员接口）
+const getUserCount = async (req, res) => {
+  try {
+    const count = await User.getCount();
+    
+    res.json({
+      message: '用户总数获取成功',
+      data: { count }
+    });
+  } catch (error) {
+    console.error('获取用户总数时出错: ' + error.stack);
+    res.status(500).json({ error: '获取用户总数失败' });
+  }
+};
+
 module.exports = {
   register,
   login,
   getAllUsers,
   getUserById,
   updateUser,
-  deleteUser
+  deleteUser,
+  getUserCount
 };

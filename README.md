@@ -16,16 +16,22 @@ backend/
 ├── controllers/           # 控制器
 │   ├── contactController.js
 │   ├── newsController.js
-│   └── productController.js
+│   ├── productController.js
+│   ├── goodsController.js # 商品管理控制器
+│   └── siteConfigController.js # 网站配置控制器
 ├── middleware/            # 中间件
 ├── models/                # 数据模型
 │   ├── ContactMessage.js
 │   ├── News.js
-│   └── Product.js
+│   ├── Product.js
+│   ├── Goods.js          # 商品数据模型
+│   └── SiteConfig.js     # 网站配置数据模型
 ├── routes/                # 路由
 │   ├── contact.js
 │   ├── news.js
-│   └── products.js
+│   ├── products.js
+│   ├── goods.js          # 商品管理路由
+│   └── siteConfig.js     # 网站配置路由
 ├── scripts/               # 脚本文件
 │   └── seedTestData.js   # 测试数据填充脚本
 └── README.md              # 后端说明文档
@@ -70,6 +76,20 @@ npm install
 - `GET /api/users/:id` - 获取特定用户信息（管理接口）
 - `PUT /api/users/:id` - 更新用户信息（管理接口）
 - `DELETE /api/users/:id` - 删除用户（管理接口）
+- `GET /api/users/count` - 获取用户总数（管理接口）
+
+### 商品管理接口
+
+- `GET /api/goods` - 获取所有商品（支持分类筛选）
+- `GET /api/goods/:id` - 获取特定商品详情
+- `POST /api/goods` - 创建新商品
+- `PUT /api/goods/:id` - 更新商品
+- `DELETE /api/goods/:id` - 删除商品
+
+### 网站管理接口
+
+- `GET /api/site-config` - 获取网站配置信息
+- `PUT /api/site-config` - 更新网站配置信息（管理接口）
 
 ## 环境配置
 

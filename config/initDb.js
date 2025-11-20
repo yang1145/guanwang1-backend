@@ -100,6 +100,39 @@ const initDb = async () => {
       )
     `);
     
+    // 创建商品表
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS goods (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        price DECIMAL(10, 2) NOT NULL,
+        currency VARCHAR(10) NOT NULL DEFAULT 'CNY',
+        description TEXT,
+        category VARCHAR(100),
+        image_url VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `);
+    
+    // 创建网站配置表
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS site_config (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        company_name VARCHAR(255) NOT NULL,
+        site_url VARCHAR(255) NOT NULL,
+        icp_number VARCHAR(100),
+        police_number VARCHAR(100),
+        copyright_info TEXT,
+        company_description TEXT,
+        seo_keywords TEXT,
+        site_title VARCHAR(255) NOT NULL,
+        friend_links JSON,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `);
+    
     // 创建默认管理员账户 (用户名: admin, 密码: admin123)
     console.log('生成默认管理员账户密码哈希...');
     const salt = await bcrypt.genSalt(10);

@@ -81,6 +81,12 @@ class User {
     const [result] = await db.query('DELETE FROM users WHERE id = ?', [id]);
     return result.affectedRows;
   }
+
+  // 获取用户总数
+  static async getCount() {
+    const [rows] = await db.query('SELECT COUNT(*) as count FROM users');
+    return rows[0].count;
+  }
 }
 
 module.exports = User;
