@@ -89,6 +89,17 @@ const initDb = async () => {
       )
     `);
     
+    // 创建用户表
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        phone VARCHAR(20) UNIQUE NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    
     // 创建默认管理员账户 (用户名: admin, 密码: admin123)
     console.log('生成默认管理员账户密码哈希...');
     const salt = await bcrypt.genSalt(10);

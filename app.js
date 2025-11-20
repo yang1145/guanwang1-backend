@@ -8,6 +8,7 @@ const productRoutes = require('./routes/products');
 const newsRoutes = require('./routes/news');
 const contactRoutes = require('./routes/contact');
 const adminRoutes = require('./routes/admin');
+const userRoutes = require('./routes/users');
 
 // 模型导入
 const Admin = require('./models/Admin');
@@ -31,6 +32,9 @@ app.get('/api', (req, res) => {
 
 // 管理员路由
 app.use('/api/admin', adminRoutes);
+
+// 用户路由
+app.use('/api/users', userRoutes);
 
 app.use('/api/products', productRoutes);
 app.use('/api/news', newsRoutes);
