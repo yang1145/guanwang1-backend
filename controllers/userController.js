@@ -238,7 +238,7 @@ const getUserCount = async (req, res) => {
     });
   } catch (error) {
     console.error('获取用户总数时出错: ' + error.stack);
-    res.status(500).json({ error: '获取用户总数失败' });
+    res.status(500).json({ error: '获取用户总数失败: ' + error.message });
   }
 };
 

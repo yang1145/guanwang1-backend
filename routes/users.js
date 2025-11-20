@@ -12,6 +12,9 @@ router.post('/login', login);
 // 获取所有用户（管理接口）
 router.get('/', adminAuth, getAllUsers);
 
+// 获取用户总数（管理接口）
+router.get('/count', adminAuth, getUserCount);
+
 // 获取特定用户信息（管理接口）
 router.get('/:id', adminAuth, getUserById);
 
@@ -20,8 +23,5 @@ router.put('/:id', adminAuth, updateUser);
 
 // 删除用户（管理接口）
 router.delete('/:id', adminAuth, deleteUser);
-
-// 获取用户总数（管理接口）
-router.get('/count', adminAuth, getUserCount);
 
 module.exports = router;

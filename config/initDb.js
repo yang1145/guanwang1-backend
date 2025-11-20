@@ -133,6 +133,17 @@ const initDb = async () => {
       )
     `);
     
+    // 创建分类表
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS categories (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(100) NOT NULL UNIQUE,
+        description TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `);
+    
     // 创建默认管理员账户 (用户名: admin, 密码: admin123)
     console.log('生成默认管理员账户密码哈希...');
     const salt = await bcrypt.genSalt(10);
@@ -149,7 +160,15 @@ const initDb = async () => {
       ['admin', hashedPassword]
     );
     
+    // 插入默认网站配置信息
+    await connection.execute(`
+      INSERT IGNORE INTO site_config 
+      (company_name, site_url, site_title) 
+      VALUES (?, ?, ?)
+    `, ['默认公司名称', 'https://www.example.com', '默认网站标题']);
+    
     console.log('默认管理员账户已创建或已存在');
+    console.log('默认网站配置已创建或已存在');
     console.log('数据库表创建成功');
   } catch (error) {
     console.error('创建数据库表时出错: ' + error.message);

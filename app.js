@@ -10,6 +10,8 @@ const contactRoutes = require('./routes/contact');
 const adminRoutes = require('./routes/admin');
 const userRoutes = require('./routes/users');
 const siteConfigRoutes = require('./routes/siteConfig');
+const goodsRoutes = require('./routes/goods');
+const categoryRoutes = require('./routes/categories');
 
 // 模型导入
 const Admin = require('./models/Admin');
@@ -41,6 +43,8 @@ app.use('/api/products', productRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/site-config', siteConfigRoutes);
+app.use('/api/goods', goodsRoutes);
+app.use('/api/categories', categoryRoutes);
 
 // 只有在非Docker环境中才处理前端路由
 if (!process.env.IS_DOCKER) {

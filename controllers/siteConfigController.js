@@ -50,13 +50,13 @@ const updateSiteConfig = async (req, res) => {
     const result = await SiteConfig.update({
       company_name,
       site_url,
-      icp_number: icp_number || '',
-      police_number: police_number || '',
-      copyright_info: copyright_info || '',
-      company_description: company_description || '',
-      seo_keywords: seo_keywords || '',
+      icp_number,
+      police_number,
+      copyright_info,
+      company_description,
+      seo_keywords,
       site_title,
-      friend_links: friend_links || '[]'
+      friend_links
     });
     
     if (result === 0) {

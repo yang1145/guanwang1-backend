@@ -635,6 +635,156 @@
   }
   ```
 
+### 8. 分类管理接口
+
+#### 获取所有分类
+- **URL**: `GET /api/categories`
+- **描述**: 获取所有分类列表
+- **响应**:
+  ```json
+  {
+    "message": "分类列表获取成功",
+    "data": [
+      {
+        "id": 1,
+        "name": "计算",
+        "description": "计算服务相关产品",
+        "created_at": "创建时间",
+        "updated_at": "更新时间"
+      },
+      {
+        "id": 2,
+        "name": "存储",
+        "description": "存储服务相关产品",
+        "created_at": "创建时间",
+        "updated_at": "更新时间"
+      }
+    ]
+  }
+  ```
+
+#### 获取特定分类
+- **URL**: `GET /api/categories/:id`
+- **描述**: 根据ID获取特定分类
+- **路径参数**:
+  - `id`: 分类ID
+- **响应**:
+  ```json
+  {
+    "message": "分类获取成功",
+    "data": {
+      "id": 1,
+      "name": "计算",
+      "description": "计算服务相关产品",
+      "created_at": "创建时间",
+      "updated_at": "更新时间"
+    }
+  }
+  ```
+
+#### 创建分类
+- **URL**: `POST /api/categories`
+- **描述**: 创建新分类
+- **请求体**:
+  ```json
+  {
+    "name": "安全",
+    "description": "安全服务相关产品"
+  }
+  ```
+- **响应**:
+  ```json
+  {
+    "message": "分类创建成功",
+    "data": {
+      "id": 3
+    }
+  }
+  ```
+
+#### 更新分类
+- **URL**: `PUT /api/categories/:id`
+- **描述**: 更新特定分类
+- **路径参数**:
+  - `id`: 分类ID
+- **请求体**:
+  ```json
+  {
+    "name": "网络安全",
+    "description": "网络安全服务相关产品"
+  }
+  ```
+- **响应**:
+  ```json
+  {
+    "message": "分类更新成功",
+    "data": {
+      "id": 1
+    }
+  }
+  ```
+
+#### 更新分类列表
+- **URL**: `PUT /api/categories`
+- **描述**: 更新分类列表（替换整个分类列表）
+- **请求体**:
+  ```json
+  {
+    "categories": [
+      {
+        "name": "计算",
+        "description": "计算服务相关产品"
+      },
+      {
+        "name": "存储",
+        "description": "存储服务相关产品"
+      },
+      {
+        "name": "网络",
+        "description": "网络服务相关产品"
+      }
+    ]
+  }
+  ```
+- **响应**:
+  ```json
+  {
+    "message": "分类列表更新成功",
+    "data": {
+      "updatedCount": 3
+    }
+  }
+  ```
+
+#### 同步分类表
+- **URL**: `POST /api/categories/sync`
+- **描述**: 根据现有产品和商品数据同步分类表
+- **响应**:
+  ```json
+  {
+    "message": "分类表同步成功",
+    "data": {
+      "updatedCount": 5,
+      "categories": ["计算", "存储", "网络", "数据库", "容器"]
+    }
+  }
+  ```
+
+#### 删除分类
+- **URL**: `DELETE /api/categories/:id`
+- **描述**: 删除特定分类
+- **路径参数**:
+  - `id`: 分类ID
+- **响应**:
+  ```json
+  {
+    "message": "分类删除成功",
+    "data": {
+      "id": 1
+    }
+  }
+  ```
+
 #### 更新网站配置信息
 - **URL**: `PUT /api/site-config`
 - **描述**: 管理员更新网站配置信息

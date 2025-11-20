@@ -17,6 +17,13 @@ class Goods {
     return rows;
   }
   
+  // 获取所有分类
+  static async getAllCategories() {
+    const query = 'SELECT DISTINCT category FROM goods WHERE category IS NOT NULL';
+    const [rows] = await db.query(query);
+    return rows.map(row => row.category);
+  }
+  
   // 根据ID获取商品
   static async getById(id) {
     const [rows] = await db.query('SELECT * FROM goods WHERE id = ?', [id]);

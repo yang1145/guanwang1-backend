@@ -84,8 +84,13 @@ class User {
 
   // 获取用户总数
   static async getCount() {
-    const [rows] = await db.query('SELECT COUNT(*) as count FROM users');
-    return rows[0].count;
+    try {
+      const [rows] = await db.query('SELECT COUNT(*) as count FROM users');
+      return rows[0].count;
+    } catch (error) {
+      console.error('获取用户总数时出错:', error);
+      throw error;
+    }
   }
 }
 
