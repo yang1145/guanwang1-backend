@@ -1,0 +1,20 @@
+# Node.js 应用的 Docker 镜像构建
+node_modules
+npm-debug.log
+
+# 环境配置文件
+.env
+
+# 编辑器相关
+.vscode/
+.idea/
+
+# Git 相关
+.git/
+
+# 日志文件
+*.log
+
+# Docker 相关
+docker-compose.yml
+.dockerignore
