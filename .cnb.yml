@@ -30,6 +30,13 @@
       script: |
         echo "构建完成，产物列表:"
         ls -la dist/
+        
+    # 创建Release
+    - name: 创建Release
+      type: git:release
+      options:
+        tag: v1.0.0-build.${CNB_BUILD_NUMBER}
+        description: "自动构建版本 ${CNB_BUILD_NUMBER}"
 
 # 匹配main分支
 main:
@@ -62,6 +69,13 @@ main:
           script: |
             echo "构建完成，产物列表:"
             ls -la dist/ || { echo "没有找到dist目录"; exit 1; }
+            
+        # 创建Release
+        - name: 创建Release
+          type: git:release
+          options:
+            tag: v1.0.0-build.${CNB_BUILD_NUMBER}
+            description: "自动构建版本 ${CNB_BUILD_NUMBER}"
 
 # 匹配master分支
 master:
@@ -94,3 +108,10 @@ master:
           script: |
             echo "构建完成，产物列表:"
             ls -la dist/ || { echo "没有找到dist目录"; exit 1; }
+            
+        # 创建Release
+        - name: 创建Release
+          type: git:release
+          options:
+            tag: v1.0.0-build.${CNB_BUILD_NUMBER}
+            description: "自动构建版本 ${CNB_BUILD_NUMBER}"
