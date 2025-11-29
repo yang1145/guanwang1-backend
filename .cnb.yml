@@ -35,8 +35,8 @@
     - name: 创建Release
       type: git:release
       options:
-        tag: v1.0.0-build.${CNB_BUILD_NUMBER}
-        title: Release v1.0.0-build.${CNB_BUILD_NUMBER}
+        tag: v1.0.0
+        title: Release v1.0.0
         description: "Automatic release created by CI/CD pipeline"
       
     # 上传构建产物到Release
