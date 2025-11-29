@@ -45,6 +45,16 @@ backend/
 npm install
 ```
 
+## 构建可执行文件
+
+项目支持使用pkg工具构建跨平台可执行文件：
+
+```bash
+npm run build
+```
+
+该命令会生成针对Windows、Linux和macOS三个平台的可执行文件，并输出到dist目录中。
+
 ## API 接口
 
 ### 产品相关接口
