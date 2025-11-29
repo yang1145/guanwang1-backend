@@ -37,6 +37,12 @@
       options:
         tag: v1.0.0-build.${CNB_BUILD_NUMBER}
         description: "自动构建版本 ${CNB_BUILD_NUMBER}"
+    # 上传构建产物到Release
+    - name: 上传构建产物到Release
+      image: cnbcool/attachments:latest
+      options:
+        assets: |
+          dist/*
 
 # 匹配main分支
 main:
@@ -76,6 +82,12 @@ main:
           options:
             tag: v1.0.0-build.${CNB_BUILD_NUMBER}
             description: "自动构建版本 ${CNB_BUILD_NUMBER}"
+        # 上传构建产物到Release
+        - name: 上传构建产物到Release
+          image: cnbcool/attachments:latest
+          options:
+            assets: |
+              dist/*
 
 # 匹配master分支
 master:
@@ -115,3 +127,9 @@ master:
           options:
             tag: v1.0.0-build.${CNB_BUILD_NUMBER}
             description: "自动构建版本 ${CNB_BUILD_NUMBER}"
+        # 上传构建产物到Release
+        - name: 上传构建产物到Release
+          image: cnbcool/attachments:latest
+          options:
+            assets: |
+              dist/*
