@@ -41,8 +41,24 @@ main:
           options:
             tag: Nightly
             description: description
+        - name: 上传二进制文件到Release
+          image: cnbcool/attachments:latest
+          settings:
+            attachments:
+              - "dist/*"
 
 # 匹配master分支
 master:
   push:
     - <<: *pipeline
+    - stages:
+        - name: git release
+          type: git:release
+          options:
+            tag: Nightly
+            description: description
+        - name: 上传二进制文件到Release
+          image: cnbcool/attachments:latest
+          settings:
+            attachments:
+              - "dist/*"
