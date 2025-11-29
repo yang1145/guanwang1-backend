@@ -16,8 +16,34 @@ main:
         - name: 安装 Node.js 环境
           script: |
             echo "安装 Node.js 环境..."
-            # 下载并安装 Node.js
-            wget https://nodejs.org/dist/v18.18.0/node-v18.18.0-linux-x64.tar.xz
+            # 安装基本工具
+            if command -v apt-get >/dev/null 2>&1; then
+              echo "使用 apt-get 安装基本工具..."
+              sudo apt-get update
+              sudo apt-get install -y curl wget tar xz-utils
+            elif command -v yum >/dev/null 2>&1; then
+              echo "使用 yum 安装基本工具..."
+              sudo yum install -y curl wget tar xz
+            elif command -v apk >/dev/null 2>&1; then
+              echo "使用 apk 安装基本工具..."
+              sudo apk add --no-cache curl wget tar xz
+            else
+              echo "警告: 无法识别包管理器，跳过工具安装"
+            fi
+            
+            # 尝试多种方法安装 Node.js
+            if command -v curl >/dev/null 2>&1; then
+              echo "使用 curl 下载 Node.js..."
+              curl -fsSL https://nodejs.org/dist/v18.18.0/node-v18.18.0-linux-x64.tar.xz -o node-v18.18.0-linux-x64.tar.xz
+            elif command -v wget >/dev/null 2>&1; then
+              echo "使用 wget 下载 Node.js..."
+              wget https://nodejs.org/dist/v18.18.0/node-v18.18.0-linux-x64.tar.xz
+            else
+              echo "错误: 无法找到合适的下载工具"
+              exit 1
+            fi
+            
+            # 解压并设置环境变量
             tar -xf node-v18.18.0-linux-x64.tar.xz
             export PATH=$(pwd)/node-v18.18.0-linux-x64/bin:$PATH
             echo "export PATH=$(pwd)/node-v18.18.0-linux-x64/bin:$PATH" >> ~/.bashrc
@@ -67,8 +93,34 @@ master:
         - name: 安装 Node.js 环境
           script: |
             echo "安装 Node.js 环境..."
-            # 下载并安装 Node.js
-            wget https://nodejs.org/dist/v18.18.0/node-v18.18.0-linux-x64.tar.xz
+            # 安装基本工具
+            if command -v apt-get >/dev/null 2>&1; then
+              echo "使用 apt-get 安装基本工具..."
+              sudo apt-get update
+              sudo apt-get install -y curl wget tar xz-utils
+            elif command -v yum >/dev/null 2>&1; then
+              echo "使用 yum 安装基本工具..."
+              sudo yum install -y curl wget tar xz
+            elif command -v apk >/dev/null 2>&1; then
+              echo "使用 apk 安装基本工具..."
+              sudo apk add --no-cache curl wget tar xz
+            else
+              echo "警告: 无法识别包管理器，跳过工具安装"
+            fi
+            
+            # 尝试多种方法安装 Node.js
+            if command -v curl >/dev/null 2>&1; then
+              echo "使用 curl 下载 Node.js..."
+              curl -fsSL https://nodejs.org/dist/v18.18.0/node-v18.18.0-linux-x64.tar.xz -o node-v18.18.0-linux-x64.tar.xz
+            elif command -v wget >/dev/null 2>&1; then
+              echo "使用 wget 下载 Node.js..."
+              wget https://nodejs.org/dist/v18.18.0/node-v18.18.0-linux-x64.tar.xz
+            else
+              echo "错误: 无法找到合适的下载工具"
+              exit 1
+            fi
+            
+            # 解压并设置环境变量
             tar -xf node-v18.18.0-linux-x64.tar.xz
             export PATH=$(pwd)/node-v18.18.0-linux-x64/bin:$PATH
             echo "export PATH=$(pwd)/node-v18.18.0-linux-x64/bin:$PATH" >> ~/.bashrc
