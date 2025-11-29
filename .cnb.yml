@@ -35,15 +35,15 @@
     - name: 创建Release
       type: git:release
       options:
-        tag: v${CNB_TIMESTAMP}
-        description: "Auto release by CI/CD pipeline"
+        title: release
+        description: ${LATEST_CHANGE_LOG}
       
     # 上传构建产物到Release
     - name: 上传构建产物到Release
       image: cnbcool/attachments:latest
-      options:
-        assets: |
-          dist/*
+      settings:
+        attachments:
+          - dist/*
 
 # 匹配main分支
 main:
