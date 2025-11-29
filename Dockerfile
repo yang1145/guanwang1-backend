@@ -1,14 +1,17 @@
 # 使用官方 Node.js 运行时作为基础镜像
 FROM node:18-alpine
 
+# 安装额外工具（如果需要）
+RUN apk add --no-cache bash
+
 # 设置工作目录
 WORKDIR /usr/src/app
 
 # 复制 package.json 和 package-lock.json（如果存在）
 COPY package*.json ./
 
-# 安装生产依赖
-RUN npm install
+# 检查 npm 是否可用并安装生产依赖
+RUN npm --version && npm ci --only=production
 
 # 复制应用源代码
 COPY . .

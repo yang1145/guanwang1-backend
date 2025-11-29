@@ -10,6 +10,9 @@ backend/
 ├── package.json           # 项目配置和依赖
 ├── .env.example          # 环境变量示例文件
 ├── .gitignore            # Git忽略文件配置
+├── .dockerignore         # Docker忽略文件配置
+├── Dockerfile            # Docker镜像构建文件
+├── docker-compose.yml    # Docker Compose配置文件
 ├── config/                # 配置文件
 │   ├── db.js             # 数据库配置
 │   └── initDb.js         # 数据库初始化脚本
@@ -110,6 +113,45 @@ DB_HOST=localhost DB_USER=root DB_PASSWORD=your_password ./guanwang1-backend-lin
 Windows示例：
 ```cmd
 set DB_HOST=localhost && set DB_USER=root && set DB_PASSWORD=your_password && guanwang1-backend-win.exe
+```
+
+## 使用 Docker 运行
+
+项目支持使用 Docker 容器化部署。提供了 Dockerfile 和 docker-compose.yml 文件。
+
+### 构建 Docker 镜像
+
+```bash
+docker build -t guanwang1-backend .
+```
+
+### 使用 Docker Compose 运行（推荐）
+
+Docker Compose 会同时启动应用和 MySQL 数据库：
+
+```bash
+docker-compose up -d
+```
+
+这将启动两个容器：
+1. 应用容器：运行后端服务，默认端口 3001
+2. 数据库容器：运行 MySQL 8.0
+
+应用容器会在启动时自动初始化数据库表结构，然后启动服务。
+
+### 单独运行 Docker 容器
+
+如果您已有 MySQL 数据库，可以直接运行应用容器：
+
+```bash
+docker run -p 3001:3001 --env-file .env guanwang1-backend
+```
+
+注意需要提供有效的 .env 文件来配置数据库连接。
+
+如果数据库尚未初始化，需要先进入容器手动运行初始化命令：
+```bash
+docker exec -it <container_id> npm run init-db
 ```
 
 ## API 接口

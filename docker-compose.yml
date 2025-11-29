@@ -16,6 +16,12 @@ services:
       - db
     networks:
       - app-network
+    command: >
+      sh -c "
+        sleep 10 &&
+        npm run init-db &&
+        npm start
+      "
 
   db:
     image: mysql:8.0

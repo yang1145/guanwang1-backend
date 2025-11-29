@@ -2,6 +2,9 @@
 node_modules
 npm-debug.log
 
+# 构建产物
+dist/
+
 # 环境配置文件
 .env
 
