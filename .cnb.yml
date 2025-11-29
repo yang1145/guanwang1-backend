@@ -47,89 +47,9 @@
 # 匹配main分支
 main:
   push:
-    - runner:
-        cpus: 64
-      docker:
-        image: node:18
-      stages:
-        # 检出代码
-        - name: 检出代码
-          script: |
-            echo "检出 ${CNB_REPO} 仓库的 ${CNB_COMMIT} 提交"
-            echo "分支: ${CNB_BRANCH}"
-            
-        # 安装项目依赖
-        - name: 安装项目依赖
-          script: |
-            echo "安装Node.js依赖..."
-            npm ci || { echo "依赖安装失败"; exit 1; }
-            
-        # 构建可执行文件
-        - name: 构建跨平台可执行文件
-          script: |
-            echo "使用pkg构建Windows和Linux可执行文件..."
-            npm run build || { echo "构建失败"; exit 1; }
-            
-        # 显示构建结果
-        - name: 显示构建产物
-          script: |
-            echo "构建完成，产物列表:"
-            ls -la dist/ || { echo "没有找到dist目录"; exit 1; }
-            
-        # 创建Release
-        - name: 创建Release
-          type: git:release
-          options:
-            tag: v1.0.0-build.${CNB_BUILD_NUMBER}
-            description: "自动构建版本 ${CNB_BUILD_NUMBER}"
-        # 上传构建产物到Release
-        - name: 上传构建产物到Release
-          image: cnbcool/attachments:latest
-          options:
-            assets: |
-              dist/*
+    - <<: *pipeline
 
 # 匹配master分支
 master:
   push:
-    - runner:
-        cpus: 64
-      docker:
-        image: node:18
-      stages:
-        # 检出代码
-        - name: 检出代码
-          script: |
-            echo "检出 ${CNB_REPO} 仓库的 ${CNB_COMMIT} 提交"
-            echo "分支: ${CNB_BRANCH}"
-            
-        # 安装项目依赖
-        - name: 安装项目依赖
-          script: |
-            echo "安装Node.js依赖..."
-            npm ci || { echo "依赖安装失败"; exit 1; }
-            
-        # 构建可执行文件
-        - name: 构建跨平台可执行文件
-          script: |
-            echo "使用pkg构建Windows和Linux可执行文件..."
-            npm run build || { echo "构建失败"; exit 1; }
-            
-        # 显示构建结果
-        - name: 显示构建产物
-          script: |
-            echo "构建完成，产物列表:"
-            ls -la dist/ || { echo "没有找到dist目录"; exit 1; }
-            
-        # 创建Release
-        - name: 创建Release
-          type: git:release
-          options:
-            tag: v1.0.0-build.${CNB_BUILD_NUMBER}
-            description: "自动构建版本 ${CNB_BUILD_NUMBER}"
-        # 上传构建产物到Release
-        - name: 上传构建产物到Release
-          image: cnbcool/attachments:latest
-          options:
-            assets: |
-              dist/*
+    - <<: *pipeline
