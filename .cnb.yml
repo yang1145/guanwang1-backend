@@ -12,15 +12,37 @@ main:
             echo "检出 ${CNB_REPO} 仓库的 ${CNB_COMMIT} 提交"
             echo "分支: ${CNB_BRANCH}"
             
+        # 安装 Node.js 环境
+        - name: 安装 Node.js 环境
+          script: |
+            echo "安装 Node.js 环境..."
+            # 下载并安装 Node.js
+            wget https://nodejs.org/dist/v18.18.0/node-v18.18.0-linux-x64.tar.xz
+            tar -xf node-v18.18.0-linux-x64.tar.xz
+            export PATH=$(pwd)/node-v18.18.0-linux-x64/bin:$PATH
+            echo "export PATH=$(pwd)/node-v18.18.0-linux-x64/bin:$PATH" >> ~/.bashrc
+            
+        # 验证 Node.js 和 npm 安装
+        - name: 验证环境安装
+          script: |
+            # 设置 PATH
+            export PATH=$(pwd)/node-v18.18.0-linux-x64/bin:$PATH
+            echo "Node.js 版本: $(node --version)"
+            echo "NPM 版本: $(npm --version)"
+            
         # 安装依赖
         - name: 安装项目依赖
           script: |
+            # 设置 PATH
+            export PATH=$(pwd)/node-v18.18.0-linux-x64/bin:$PATH
             echo "安装Node.js依赖..."
             npm ci
             
         # 构建可执行文件
         - name: 构建跨平台可执行文件
           script: |
+            # 设置 PATH
+            export PATH=$(pwd)/node-v18.18.0-linux-x64/bin:$PATH
             echo "使用pkg构建Windows和Linux可执行文件..."
             npm run build
             
@@ -41,15 +63,37 @@ master:
             echo "检出 ${CNB_REPO} 仓库的 ${CNB_COMMIT} 提交"
             echo "分支: ${CNB_BRANCH}"
             
+        # 安装 Node.js 环境
+        - name: 安装 Node.js 环境
+          script: |
+            echo "安装 Node.js 环境..."
+            # 下载并安装 Node.js
+            wget https://nodejs.org/dist/v18.18.0/node-v18.18.0-linux-x64.tar.xz
+            tar -xf node-v18.18.0-linux-x64.tar.xz
+            export PATH=$(pwd)/node-v18.18.0-linux-x64/bin:$PATH
+            echo "export PATH=$(pwd)/node-v18.18.0-linux-x64/bin:$PATH" >> ~/.bashrc
+            
+        # 验证 Node.js 和 npm 安装
+        - name: 验证环境安装
+          script: |
+            # 设置 PATH
+            export PATH=$(pwd)/node-v18.18.0-linux-x64/bin:$PATH
+            echo "Node.js 版本: $(node --version)"
+            echo "NPM 版本: $(npm --version)"
+            
         # 安装依赖
         - name: 安装项目依赖
           script: |
+            # 设置 PATH
+            export PATH=$(pwd)/node-v18.18.0-linux-x64/bin:$PATH
             echo "安装Node.js依赖..."
             npm ci
             
         # 构建可执行文件
         - name: 构建跨平台可执行文件
           script: |
+            # 设置 PATH
+            export PATH=$(pwd)/node-v18.18.0-linux-x64/bin:$PATH
             echo "使用pkg构建Windows和Linux可执行文件..."
             npm run build
             
