@@ -31,6 +31,13 @@
         echo "构建完成，产物列表:"
         ls -la dist/
       
+    # 创建Release
+    - name: 创建Release
+      type: git:release
+      options:
+        tag: v${CNB_TIMESTAMP}
+        description: "Auto release by CI/CD pipeline"
+      
     # 上传构建产物到Release
     - name: 上传构建产物到Release
       image: cnbcool/attachments:latest
