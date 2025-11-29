@@ -48,6 +48,22 @@
 main:
   push:
     - <<: *pipeline
+  auto_tag:
+    autotag:
+      stages:
+        - name: release rules
+          script: echo -e "$RELEASE_RULES"
+        - name: 自动生成 Tag
+          image: cnbcool/git-auto-tag:latest
+          settings:
+            tagFormat: \${version}
+            branch: $CNB_BRANCH
+            repoUrlHttps: $CNB_REPO_URL_HTTPS
+            releaseRules: $RELEASE_RULES
+          exports:
+            tag: NEW_TAG
+        - name: show tag
+          script: echo $NEW_TAG
 
 # 匹配master分支
 master:
