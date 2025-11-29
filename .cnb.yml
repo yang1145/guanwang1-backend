@@ -35,16 +35,17 @@
     - name: 创建Release
       type: git:release
       options:
-        tag: v1.0.0
-        title: release
-        description: ${LATEST_CHANGE_LOG}
+        tag: v1.0.0-build.${CNB_BUILD_NUMBER}
+        title: Release v1.0.0-build.${CNB_BUILD_NUMBER}
+        description: "Automatic release created by CI/CD pipeline"
       
     # 上传构建产物到Release
     - name: 上传构建产物到Release
       image: cnbcool/attachments:latest
       settings:
         attachments:
-          - dist/*
+          - dist/guanwang1-backend-win.exe
+          - dist/guanwang1-backend-linux
 
 # 匹配main分支
 main:
