@@ -39,7 +39,7 @@ main:
         - name: git release
           type: git:release
           options:
-            tag: Nightly
+            tag: Nightly-Build
             description: description
         - name: 上传二进制文件到Release
           image: cnbcool/attachments:latest
@@ -55,7 +55,7 @@ master:
         - name: git release
           type: git:release
           options:
-            tag: Nightly
+            tag: Nightly-Build
             description: description
         - name: 上传二进制文件到Release
           image: cnbcool/attachments:latest
