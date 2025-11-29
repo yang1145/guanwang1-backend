@@ -1,0 +1,60 @@
+# CNB 构建配置文件
+
+# 匹配main分支
+main:
+  # push事件触发
+  push:
+    - name: "后端服务构建"
+      stages:
+        # 检出代码
+        - name: 检出代码
+          script: |
+            echo "检出 ${CNB_REPO} 仓库的 ${CNB_COMMIT} 提交"
+            echo "分支: ${CNB_BRANCH}"
+            
+        # 安装依赖
+        - name: 安装项目依赖
+          script: |
+            echo "安装Node.js依赖..."
+            npm ci
+            
+        # 构建可执行文件
+        - name: 构建跨平台可执行文件
+          script: |
+            echo "使用pkg构建Windows和Linux可执行文件..."
+            npm run build
+            
+        # 显示构建结果
+        - name: 显示构建产物
+          script: |
+            echo "构建完成，产物列表:"
+            ls -la dist/
+
+# 匹配master分支（如果存在）
+master:
+  push:
+    - name: "后端服务构建"
+      stages:
+        # 检出代码
+        - name: 检出代码
+          script: |
+            echo "检出 ${CNB_REPO} 仓库的 ${CNB_COMMIT} 提交"
+            echo "分支: ${CNB_BRANCH}"
+            
+        # 安装依赖
+        - name: 安装项目依赖
+          script: |
+            echo "安装Node.js依赖..."
+            npm ci
+            
+        # 构建可执行文件
+        - name: 构建跨平台可执行文件
+          script: |
+            echo "使用pkg构建Windows和Linux可执行文件..."
+            npm run build
+            
+        # 显示构建结果
+        - name: 显示构建产物
+          script: |
+            echo "构建完成，产物列表:"
+            ls -la dist/

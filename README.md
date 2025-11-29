@@ -53,7 +53,64 @@ npm install
 npm run build
 ```
 
-该命令会生成针对Windows、Linux和macOS三个平台的可执行文件，并输出到dist目录中。
+该命令会生成针对Windows和Linux两个平台的可执行文件，并输出到dist目录中。
+
+## 配置环境变量
+
+构建后的可执行文件需要环境变量才能正确运行。有以下几种方式配置：
+
+### 方法一：使用.env文件（推荐）
+
+在可执行文件同目录下创建一个名为`.env`的文件，内容参考[.env.example](../.env.example)：
+
+```env
+# 数据库配置
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=your_password
+DB_NAME=tech_company
+DB_PORT=3306
+
+# 服务器配置
+PORT=3001
+
+# JWT密钥
+JWT_SECRET=your-secret-key-change-in-production
+```
+
+### 方法二：设置系统环境变量
+
+在运行可执行文件前，设置相应的系统环境变量。
+
+Linux/macOS示例：
+```bash
+export DB_HOST=localhost
+export DB_USER=root
+export DB_PASSWORD=your_password
+# 设置其他必要环境变量...
+./guanwang1-backend-linux
+```
+
+Windows示例：
+```cmd
+set DB_HOST=localhost
+set DB_USER=root
+set DB_PASSWORD=your_password
+# 设置其他必要环境变量...
+guanwang1-backend-win.exe
+```
+
+### 方法三：直接在命令行中指定
+
+Linux/macOS示例：
+```bash
+DB_HOST=localhost DB_USER=root DB_PASSWORD=your_password ./guanwang1-backend-linux
+```
+
+Windows示例：
+```cmd
+set DB_HOST=localhost && set DB_USER=root && set DB_PASSWORD=your_password && guanwang1-backend-win.exe
+```
 
 ## API 接口
 
