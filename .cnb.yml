@@ -2,6 +2,8 @@
 
 # 定义构建流水线锚点
 .pipeline: &pipeline
+  runner:
+    cpus: 64
   docker:
     image: node:18
   stages:
@@ -32,8 +34,6 @@
 # 匹配main分支
 main:
   push:
-    - runner:
-        cpus: 64
     - <<: *pipeline
     - stages:
         - name: git release
