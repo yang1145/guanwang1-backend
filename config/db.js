@@ -49,9 +49,23 @@ async function initDb() {
         sqlDb.query = function(sql, params = []) {
           return new Promise((resolve, reject) => {
             try {
-              if (sql.trim().toLowerCase().startsWith('select')) {
+              // 替换 ? 占位符为 SQLite 的 $1, $2 等格式
+              let processedSql = sql;
+              for (let i = 0; i < params.length; i++) {
+                // 注意：sql.js 不直接支持 ? 占位符，我们需要自己处理
+                // 这里我们做一个简化的处理，实际项目中可能需要更复杂的参数处理
+                if (typeof params[i] === 'string') {
+                  processedSql = processedSql.replace('?', `'${params[i].replace(/'/g, "''")}'`);
+                } else if (params[i] === null || params[i] === undefined) {
+                  processedSql = processedSql.replace('?', 'NULL');
+                } else {
+                  processedSql = processedSql.replace('?', params[i]);
+                }
+              }
+              
+              if (processedSql.trim().toLowerCase().startsWith('select')) {
                 // SELECT 查询返回行数据
-                const allResults = this.exec(sql.replace(/\?/g, () => '?')); // 简单处理参数占位符
+                const allResults = this.exec(processedSql);
                 if (allResults.length > 0) {
                   const stmtResult = allResults[0];
                   const rows = [];
@@ -68,7 +82,7 @@ async function initDb() {
                 }
               } else {
                 // 其他操作（INSERT, UPDATE, DELETE等）
-                this.run(sql);
+                this.run(processedSql);
                 // 尝试获取最后插入的ID
                 let insertId = 0;
                 try {

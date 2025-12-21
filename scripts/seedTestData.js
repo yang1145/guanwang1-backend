@@ -66,26 +66,29 @@ async function seedData() {
     // 插入产品数据
     console.log('正在插入产品数据...');
     for (const product of sampleProducts) {
+      console.log('插入产品:', product);
       const [result] = await db.query(
         'INSERT INTO products (name, description, category, image_url) VALUES (?, ?, ?, ?)',
         [product.name, product.description, product.category, product.image_url]
       );
-      console.log(`已插入产品: ${product.name}`);
+      console.log(`已插入产品: ${product.name}, 插入ID: ${result.insertId}`);
     }
 
     // 插入新闻数据
     console.log('正在插入新闻数据...');
     for (const news of sampleNews) {
+      console.log('插入新闻:', news);
       const [result] = await db.query(
         'INSERT INTO news (title, content, author, image_url) VALUES (?, ?, ?, ?)',
         [news.title, news.content, news.author, news.image_url]
       );
-      console.log(`已插入新闻: ${news.title}`);
+      console.log(`已插入新闻: ${news.title}, 插入ID: ${result.insertId}`);
     }
 
     console.log('测试数据填充完成！');
   } catch (error) {
     console.error('填充测试数据时出错:', error.message);
+    console.error('错误堆栈:', error.stack);
   }
 }
 
