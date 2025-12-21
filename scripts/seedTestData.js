@@ -66,15 +66,30 @@ async function seedData() {
   try {
     console.log('开始填充测试数据...');
     
+    // 获取数据库类型
+    const dbType = process.env.DB_TYPE || 'sqlite';
+    console.log('当前数据库类型:', dbType);
+    
+    // 根据数据库类型调整占位符
+    const getProductQuery = dbType === 'postgresql' 
+      ? 'INSERT INTO products (name, description, category, image_url) VALUES ($1, $2, $3, $4) RETURNING id'
+      : 'INSERT INTO products (name, description, category, image_url) VALUES (?, ?, ?, ?)';
+      
+    const getNewsQuery = dbType === 'postgresql'
+      ? 'INSERT INTO news (title, content, author, image_url) VALUES ($1, $2, $3, $4) RETURNING id'
+      : 'INSERT INTO news (title, content, author, image_url) VALUES (?, ?, ?, ?)';
+    
     // 插入产品数据
     console.log('正在插入产品数据...');
     for (const product of sampleProducts) {
       console.log('插入产品:', product);
       const [result] = await db.query(
-        'INSERT INTO products (name, description, category, image_url) VALUES (?, ?, ?, ?)',
+        getProductQuery,
         [product.name, product.description, product.category, product.image_url]
       );
-      console.log(`已插入产品: ${product.name}, 插入ID: ${result.insertId}`);
+      
+      const insertId = dbType === 'postgresql' ? result.rows[0].id : result.insertId;
+      console.log(`已插入产品: ${product.name}, 插入ID: ${insertId}`);
     }
 
     // 插入新闻数据
@@ -82,10 +97,12 @@ async function seedData() {
     for (const news of sampleNews) {
       console.log('插入新闻:', news);
       const [result] = await db.query(
-        'INSERT INTO news (title, content, author, image_url) VALUES (?, ?, ?, ?)',
+        getNewsQuery,
         [news.title, news.content, news.author, news.image_url]
       );
-      console.log(`已插入新闻: ${news.title}, 插入ID: ${result.insertId}`);
+      
+      const insertId = dbType === 'postgresql' ? result.rows[0].id : result.insertId;
+      console.log(`已插入新闻: ${news.title}, 插入ID: ${insertId}`);
     }
 
     console.log('测试数据填充完成！');
