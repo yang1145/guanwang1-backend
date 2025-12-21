@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         node-version: [18.x, 20.x, 22.x, 24.x]
-        database-type: [mysql, sqlite]
+        database-type: [mysql, sqlite, postgresql]
     
     services:
       mysql:
@@ -30,6 +30,19 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
+      
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: postgrespassword
+          POSTGRES_DB: tech_company_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     
     steps:
     - uses: actions/checkout@v4
@@ -64,6 +77,17 @@ jobs:
         DB_TYPE: sqlite
         SQLITE_PATH: ./test-database.db
     
+    - name: Run database initialization for PostgreSQL
+      if: matrix.database-type == 'postgresql'
+      run: npm run init-db
+      env:
+        DB_TYPE: postgresql
+        POSTGRES_HOST: localhost
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgrespassword
+        POSTGRES_DB: tech_company_test
+        POSTGRES_PORT: 5432
+    
     - name: Seed test data for MySQL
       if: matrix.database-type == 'mysql'
       run: npm run seed-test-data
@@ -81,6 +105,17 @@ jobs:
       env:
         DB_TYPE: sqlite
         SQLITE_PATH: ./test-database.db
+
+    - name: Seed test data for PostgreSQL
+      if: matrix.database-type == 'postgresql'
+      run: npm run seed-test-data
+      env:
+        DB_TYPE: postgresql
+        POSTGRES_HOST: localhost
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgrespassword
+        POSTGRES_DB: tech_company_test
+        POSTGRES_PORT: 5432
 
   build:
     needs: test
