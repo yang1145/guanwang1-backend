@@ -59,132 +59,139 @@ const sampleNews = [
   }
 ];
 
-// 不再需要单独的 closeDatabaseConnection 函数，
-// 因为我们将直接使用导入的 db 实例，并在最后调用 end。
+/**
+ * 生成数据库兼容的INSERT查询语句
+ * @param {string} table - 表名
+ * @param {string[]} columns - 字段名数组
+ * @param {string} returning - PostgreSQL需要的RETURNING子句
+ * @returns {string} 生成的SQL查询
+ */
+function generateInsertQuery(table, columns, returning = '') {
+  const dbType = process.env.DB_TYPE || 'sqlite';
+  const placeholders = dbType === 'postgresql'
+    ? columns.map((_, i) => `$${i + 1}`).join(', ')
+    : columns.map(() => '?').join(', ');
+  
+  return `INSERT INTO ${table} (${columns.join(', ')}) VALUES (${placeholders}) ${returning}`.trim();
+}
+
+/**
+ * 安全关闭数据库连接
+ * @returns {Promise<void>}
+ */
+async function closeDatabase() {
+  if (db && typeof db.end === 'function') {
+    try {
+      await db.end();
+      console.log('✅ 数据库连接已安全关闭');
+    } catch (err) {
+      console.warn('⚠️ 关闭数据库连接时出错:', err.message);
+    }
+  }
+}
+
+/**
+ * 处理插入结果获取ID
+ * @param {any[]} result - 查询结果
+ * @returns {number|string|null} 插入ID
+ */
+function getInsertId(result) {
+  const dbType = process.env.DB_TYPE || 'sqlite';
+  if (dbType === 'postgresql') {
+    return result?.[0]?.rows?.[0]?.id || null;
+  }
+  return result?.[0]?.insertId || null;
+}
 
 async function seedData() {
+  console.log('🌱 开始填充测试数据...');
+  
+  const dbType = process.env.DB_TYPE || 'sqlite';
+  console.log(`🔌 当前数据库类型: ${dbType}`);
+
   try {
-    console.log('开始填充测试数据...');
-    
-    // 获取数据库类型
-    const dbType = process.env.DB_TYPE || 'sqlite';
-    console.log('当前数据库类型:', dbType);
-    
-    // 根据数据库类型调整占位符
-    const getProductQuery = dbType === 'postgresql' 
-      ? 'INSERT INTO products (name, description, category, image_url) VALUES ($1, $2, $3, $4) RETURNING id'
-      : 'INSERT INTO products (name, description, category, image_url) VALUES (?, ?, ?, ?)';
-      
-    const getNewsQuery = dbType === 'postgresql'
-      ? 'INSERT INTO news (title, content, author, image_url) VALUES ($1, $2, $3, $4) RETURNING id'
-      : 'INSERT INTO news (title, content, author, image_url) VALUES (?, ?, ?, ?)';
-    
-    // 插入产品数据
-    console.log('正在插入产品数据...');
+    // 1. 插入产品数据
+    console.log('\n📦 正在插入产品数据...');
+    const productQuery = generateInsertQuery(
+      'products', 
+      ['name', 'description', 'category', 'image_url'],
+      dbType === 'postgresql' ? 'RETURNING id' : ''
+    );
+
     for (const product of sampleProducts) {
-      console.log('插入产品:', product);
-      const result = await db.query(
-        getProductQuery,
-        [product.name, product.description, product.category, product.image_url]
-      );
+      const params = [
+        product.name, 
+        product.description, 
+        product.category, 
+        product.image_url
+      ];
       
-      // 处理不同数据库的返回结果格式
-      let insertId;
-      if (dbType === 'postgresql') {
-        // PostgreSQL 返回数组，第一个元素包含 rows 属性
-        if (result && result[0] && result[0].rows && result[0].rows[0]) {
-          insertId = result[0].rows[0].id;
-        } else {
-          insertId = 'unknown';
-        }
-      } else {
-        // MySQL/SQLite 返回数组，第一个元素包含 insertId 属性
-        if (result && result[0]) {
-          insertId = result[0].insertId || 'unknown';
-        } else {
-          insertId = 'unknown';
-        }
-      }
-      
-      console.log(`已插入产品: ${product.name}, 插入ID: ${insertId}`);
+      const result = await db.query(productQuery, params);
+      const insertId = getInsertId(result);
+      console.log(`✅ 已插入产品 [ID: ${insertId || 'N/A'}]: ${product.name}`);
     }
 
-    // 插入新闻数据
-    console.log('正在插入新闻数据...');
+    // 2. 插入新闻数据
+    console.log('\n📰 正在插入新闻数据...');
+    const newsQuery = generateInsertQuery(
+      'news', 
+      ['title', 'content', 'author', 'image_url'],
+      dbType === 'postgresql' ? 'RETURNING id' : ''
+    );
+
     for (const news of sampleNews) {
-      console.log('插入新闻:', news);
-      const result = await db.query(
-        getNewsQuery,
-        [news.title, news.content, news.author, news.image_url]
-      );
+      const params = [
+        news.title, 
+        news.content, 
+        news.author, 
+        news.image_url
+      ];
       
-      // 处理不同数据库的返回结果格式
-      let insertId;
-      if (dbType === 'postgresql') {
-        // PostgreSQL 返回数组，第一个元素包含 rows 属性
-        if (result && result[0] && result[0].rows && result[0].rows[0]) {
-          insertId = result[0].rows[0].id;
-        } else {
-          insertId = 'unknown';
-        }
-      } else {
-        // MySQL/SQLite 返回数组，第一个元素包含 insertId 属性
-        if (result && result[0]) {
-          insertId = result[0].insertId || 'unknown';
-        } else {
-          insertId = 'unknown';
-        }
-      }
-      
-      console.log(`已插入新闻: ${news.title}, 插入ID: ${insertId}`);
+      const result = await db.query(newsQuery, params);
+      const insertId = getInsertId(result);
+      console.log(`✅ 已插入新闻 [ID: ${insertId || 'N/A'}]: ${news.title}`);
     }
 
-    console.log('测试数据填充完成！');
+    console.log('\n🎉 测试数据填充完成！');
     return true;
   } catch (error) {
-    console.error('填充测试数据时出错:', error.message);
-    console.error('错误堆栈:', error.stack);
+    console.error('\n❌ 填充测试数据时出错:');
+    console.error(`   消息: ${error.message}`);
+    if (error.sql) console.error(`   SQL: ${error.sql}`);
+    if (error.sqlMessage) console.error(`   详情: ${error.sqlMessage}`);
     return false;
   }
 }
 
-// 设置超时，防止进程挂起
-const timeout = setTimeout(() => {
-  console.error('脚本执行超时，强制退出');
-  process.exit(1);
-}, 30000); // 30秒超时
+// ===== 主执行流程 =====
+(async () => {
+  // 1. 设置超时保护 (10秒，足够种子数据)
+  const TIMEOUT_MS = 10000;
+  const timeout = setTimeout(() => {
+    console.error('\n⏰ 操作超时，强制终止进程');
+    closeDatabase().finally(() => process.exit(1));
+  }, TIMEOUT_MS);
 
-// 运行数据填充
-seedData().then(async (success) => {
-  // 清除超时定时器
-  clearTimeout(timeout);
-
-  // 正确关闭数据库连接池
-  if (db && typeof db.end === 'function') {
-    await db.end().catch(err => {
-      console.warn('关闭数据库连接时出错:', err.message);
-    });
-    console.log('数据库连接已关闭');
+  try {
+    // 2. 执行种子填充
+    const success = await seedData();
+    
+    // 3. 清除超时定时器
+    clearTimeout(timeout);
+    
+    // 4. 根据结果设置退出码
+    process.exitCode = success ? 0 : 1;
+    console.log(success 
+      ? '\n✨ 脚本成功执行完成' 
+      : '\n💔 脚本执行失败'
+    );
+  } catch (error) {
+    clearTimeout(timeout);
+    console.error('\n💥 未捕获的异常:', error);
+    process.exitCode = 1;
+  } finally {
+    // 5. 确保数据库连接总是关闭
+    await closeDatabase();
+    process.exit(process.exitCode || 0);
   }
-
-  if (success) {
-    console.log('脚本执行成功完成');
-  } else {
-    console.error('脚本执行失败');
-  }
-
-  // 强制退出以确保 CI 环境下进程终止
-  process.exit(success ? 0 : 1);
-}).catch(async (error) => {
-  clearTimeout(timeout);
-  console.error('严重错误:', error);
-
-  // 尝试关闭数据库连接
-  if (db && typeof db.end === 'function') {
-    await db.end().catch(err => {
-      console.warn('关闭数据库连接时出错:', err.message);
-    });
-  }
-
-  process.exit(1);
-});
+})();
