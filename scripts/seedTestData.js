@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 require('dotenv').config();
-const mysql = require('mysql2/promise');
 const db = require('../config/db');
 
 // 虚拟云产品数据
@@ -53,88 +52,42 @@ const sampleNews = [
     image_url: '/images/news-storage-tiering.jpg'
   },
   {
-    title: '全球数据中心扩展计划',
-    content: '我们计划在未来一年内新增5个全球数据中心，进一步提升服务覆盖范围和质量...',
-    author: '基础设施团队',
-    image_url: '/images/news-datacenter-expansion.jpg'
-  },
-  {
-    title: '容器服务Kubernetes获安全合规认证',
-    content: '我们的容器服务Kubernetes已经通过多项国际安全合规认证，为企业用户提供更高安全保障...',
-    author: '安全团队',
-    image_url: '/images/news-k8s-certification.jpg'
+    title: 'CDN全球节点扩展至3000+',
+    content: '我们的内容分发网络现已覆盖全球超过3000个节点，为用户提供更快的访问速度...',
+    author: '网络团队',
+    image_url: '/images/news-cdn-expansion.jpg'
   }
 ];
 
-// 虚拟联系信息数据
-const sampleContacts = [
-  {
-    name: '张经理',
-    email: 'zhang.manager@company.com',
-    phone: '13800138001',
-    message: '我们公司想采购一批云服务器ECS，希望能安排技术专家进行方案介绍。'
-  },
-  {
-    name: '李工程师',
-    email: 'li.engineer@startup.com',
-    phone: '13800138002',
-    message: '在使用对象存储OSS时遇到上传速度慢的问题，请求技术支持协助解决。'
-  },
-  {
-    name: '王先生',
-    email: 'wang.cto@enterprise.com',
-    phone: '13800138003',
-    message: '咨询关于混合云解决方案的相关信息，以及如何迁移现有业务系统。'
-  }
-];
-
-async function seedDatabase() {
+async function seedData() {
   try {
-    console.log('开始插入测试数据...');
+    console.log('开始填充测试数据...');
     
     // 插入产品数据
-    console.log('插入产品数据...');
+    console.log('正在插入产品数据...');
     for (const product of sampleProducts) {
-      await db.execute(
+      const [result] = await db.query(
         'INSERT INTO products (name, description, category, image_url) VALUES (?, ?, ?, ?)',
         [product.name, product.description, product.category, product.image_url]
       );
+      console.log(`已插入产品: ${product.name}`);
     }
-    console.log(`成功插入 ${sampleProducts.length} 条产品数据`);
-    
+
     // 插入新闻数据
-    console.log('插入新闻数据...');
+    console.log('正在插入新闻数据...');
     for (const news of sampleNews) {
-      await db.execute(
+      const [result] = await db.query(
         'INSERT INTO news (title, content, author, image_url) VALUES (?, ?, ?, ?)',
         [news.title, news.content, news.author, news.image_url]
       );
+      console.log(`已插入新闻: ${news.title}`);
     }
-    console.log(`成功插入 ${sampleNews.length} 条新闻数据`);
-    
-    // 插入联系信息数据
-    console.log('插入联系信息数据...');
-    for (const contact of sampleContacts) {
-      await db.execute(
-        'INSERT INTO contact_messages (name, email, phone, message) VALUES (?, ?, ?, ?)',
-        [contact.name, contact.email, contact.phone, contact.message]
-      );
-    }
-    console.log(`成功插入 ${sampleContacts.length} 条联系信息数据`);
-    
-    console.log('所有测试数据插入完成！');
+
+    console.log('测试数据填充完成！');
   } catch (error) {
-    console.error('插入测试数据时发生错误:', error);
-  } finally {
-    // 关闭数据库连接
-    await db.end();
-    console.log('数据库连接已关闭');
+    console.error('填充测试数据时出错:', error.message);
   }
 }
 
-// 执行脚本
-if (require.main === module) {
-  seedDatabase();
-}
-
-module.exports = { sampleProducts, sampleNews, sampleContacts };
+// 运行数据填充
+seedData();
