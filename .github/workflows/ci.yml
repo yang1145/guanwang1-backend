@@ -12,6 +12,11 @@ jobs:
   test:
     runs-on: ubuntu-latest
     
+    strategy:
+      matrix:
+        node-version: [16.x, 18.x]
+        database-type: [mysql, sqlite]
+    
     services:
       mysql:
         image: mysql:8.0
@@ -25,10 +30,6 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
-    
-    strategy:
-      matrix:
-        node-version: [16.x, 18.x]
     
     steps:
     - uses: actions/checkout@v4
@@ -45,24 +46,41 @@ jobs:
     - name: Copy environment variables
       run: cp .env.example .env
     
-    - name: Run database migrations
+    - name: Run database initialization for MySQL
+      if: matrix.database-type == 'mysql'
       run: npm run init-db
       env:
+        DB_TYPE: mysql
         DB_HOST: 127.0.0.1
         DB_USER: root
         DB_PASSWORD: rootpassword
         DB_NAME: tech_company_test
         DB_PORT: 3306
     
-    # 注释掉测试步骤，因为项目中似乎没有测试
-    # - name: Run tests
-    #   run: npm test
-    #   env:
-    #     DB_HOST: 127.0.0.1
-    #     DB_USER: root
-    #     DB_PASSWORD: rootpassword
-    #     DB_NAME: tech_company_test
-    #     DB_PORT: 3306
+    - name: Run database initialization for SQLite
+      if: matrix.database-type == 'sqlite'
+      run: npm run init-db
+      env:
+        DB_TYPE: sqlite
+        SQLITE_PATH: ./test-database.db
+    
+    - name: Seed test data for MySQL
+      if: matrix.database-type == 'mysql'
+      run: npm run seed-test-data
+      env:
+        DB_TYPE: mysql
+        DB_HOST: 127.0.0.1
+        DB_USER: root
+        DB_PASSWORD: rootpassword
+        DB_NAME: tech_company_test
+        DB_PORT: 3306
+    
+    - name: Seed test data for SQLite
+      if: matrix.database-type == 'sqlite'
+      run: npm run seed-test-data
+      env:
+        DB_TYPE: sqlite
+        SQLITE_PATH: ./test-database.db
 
   build:
     needs: test
