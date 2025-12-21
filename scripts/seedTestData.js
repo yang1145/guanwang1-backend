@@ -2,6 +2,7 @@
 
 require('dotenv').config();
 const db = require('../config/db');
+const dbModule = require('../config/db.js');
 
 // 虚拟云产品数据
 const sampleProducts = [
@@ -59,6 +60,19 @@ const sampleNews = [
   }
 ];
 
+async function closeDatabaseConnection() {
+  try {
+    // 通过反射获取数据库实例并关闭连接池
+    const dbInstance = await require('../config/db');
+    if (dbInstance && typeof dbInstance.end === 'function') {
+      await dbInstance.end();
+      console.log('数据库连接已关闭');
+    }
+  } catch (error) {
+    console.warn('警告：关闭数据库连接时出现问题（可以忽略）', error.message);
+  }
+}
+
 async function seedData() {
   try {
     console.log('开始填充测试数据...');
@@ -86,11 +100,41 @@ async function seedData() {
     }
 
     console.log('测试数据填充完成！');
+    return true;
   } catch (error) {
     console.error('填充测试数据时出错:', error.message);
     console.error('错误堆栈:', error.stack);
+    return false;
   }
 }
 
+// 设置超时，防止进程挂起
+const timeout = setTimeout(() => {
+  console.error('脚本执行超时，强制退出');
+  process.exit(1);
+}, 30000); // 30秒超时
+
 // 运行数据填充
-seedData();
+seedData().then(async (success) => {
+  // 清除超时定时器
+  clearTimeout(timeout);
+  
+  // 关闭数据库连接
+  await closeDatabaseConnection();
+  
+  if (success) {
+    console.log('脚本执行成功完成');
+    process.exit(0);
+  } else {
+    console.error('脚本执行失败');
+    process.exit(1);
+  }
+}).catch(async (error) => {
+  clearTimeout(timeout);
+  console.error('严重错误:', error);
+  
+  // 关闭数据库连接
+  await closeDatabaseConnection();
+  
+  process.exit(1);
+});
