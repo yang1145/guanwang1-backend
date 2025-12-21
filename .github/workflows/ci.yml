@@ -74,7 +74,9 @@ jobs:
       run: npm install pg
     
     - name: Install dependencies
-      run: npm ci
+      run: |
+        npm install
+        npm ci
     
     - name: Configure test environment
       run: cp .env.example .env
