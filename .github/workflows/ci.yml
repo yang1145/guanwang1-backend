@@ -8,7 +8,6 @@ on:
   pull_request:
     branches: [main, master]
 
-# 全局环境变量 - 避免重复定义
 env:
   MYSQL_DATABASE: tech_company_test
   MYSQL_ROOT_PASSWORD: rootpassword
@@ -21,38 +20,44 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     
-    # 智能矩阵策略 - 按需启动服务
     strategy:
       matrix:
-        node-version: [18.x, 20.x] # 移除 EOL 版本，保留 LTS
+        node-version: [18.x, 20.x]
         database-type: [mysql, sqlite, postgresql]
-        include:
-          # 仅当需要时才包含服务配置
-          - database-type: mysql
-            service: mysql
-          - database-type: postgresql
-            service: postgres
     
-    # 按需启动服务 - 避免资源浪费
+    # 始终定义所有服务（GitHub Actions要求）
     services:
-      ${{ matrix.service }}:
-        ${{ matrix.service == 'mysql' && 'image: mysql:8.0' || '' }}
-        ${{ matrix.service == 'postgres' && 'image: postgres:15' || '' }}
-        env: ${{ matrix.service == 'mysql' && '{ MYSQL_ROOT_PASSWORD: "${{ env.MYSQL_ROOT_PASSWORD }}", MYSQL_DATABASE: "${{ env.MYSQL_DATABASE }}" }' || 
-                matrix.service == 'postgres' && '{ POSTGRES_PASSWORD: "${{ env.POSTGRES_PASSWORD }}", POSTGRES_DB: "${{ env.POSTGRES_DB }}" }' || '{}' }}
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ env.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE: ${{ env.MYSQL_DATABASE }}
         ports:
-          - ${{ matrix.service == 'mysql' && '3306:3306' || '' }}
-          - ${{ matrix.service == 'postgres' && '5432:5432' || '' }}
-        options: ${{ matrix.service == 'mysql' && '>-
+          - 3306:3306
+        options: >-
           --health-cmd="mysqladmin ping -uroot -p${MYSQL_ROOT_PASSWORD}"
           --health-interval=10s
           --health-timeout=5s
-          --health-retries=5' || 
-                   matrix.service == 'postgres' && '>-
+          --health-retries=5
+        # 通过空命令使服务在不需要时快速退出
+        volumes:
+          - /dev/null:/docker-entrypoint-initdb.d/init.sql
+      
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+        ports:
+          - 5432:5432
+        options: >-
           --health-cmd="pg_isready -U postgres"
           --health-interval=10s
           --health-timeout=5s
-          --health-retries=5' || '' }}
+          --health-retries=5
+        # 通过空命令使服务在不需要时快速退出
+        volumes:
+          - /dev/null:/docker-entrypoint-initdb.d/init.sql
     
     steps:
     - uses: actions/checkout@v4
@@ -70,40 +75,34 @@ jobs:
     - name: Configure test environment
       run: cp .env.example .env
     
-    # 智能数据库初始化 - 单步骤处理所有数据库类型
     - name: Initialize database & seed test data
       run: |
-        # 设置数据库特定环境变量
-        case "${{ matrix.database-type }}" in
-          mysql)
-            export DB_TYPE=mysql
-            export DB_HOST=127.0.0.1
-            export DB_USER=root
-            export DB_PASSWORD="${MYSQL_ROOT_PASSWORD}"
-            export DB_NAME="${MYSQL_DATABASE}"
-            export DB_PORT=3306
-            ;;
-          postgresql)
-            export DB_TYPE=postgresql
-            export DB_HOST=localhost
-            export DB_USER=postgres
-            export DB_PASSWORD="${POSTGRES_PASSWORD}"
-            export DB_NAME="${POSTGRES_DB}"
-            export DB_PORT=5432
-            ;;
-          sqlite)
-            export DB_TYPE=sqlite
-            export SQLITE_PATH="${{ env.SQLITE_PATH }}"
-            ;;
-        esac
+        # 动态设置数据库连接参数
+        if [ "${{ matrix.database-type }}" = "mysql" ]; then
+          export DB_TYPE=mysql
+          export DB_HOST=127.0.0.1
+          export DB_USER=root
+          export DB_PASSWORD="${MYSQL_ROOT_PASSWORD}"
+          export DB_NAME="${MYSQL_DATABASE}"
+          export DB_PORT=3306
+        elif [ "${{ matrix.database-type }}" = "postgresql" ]; then
+          export DB_TYPE=postgresql
+          export DB_HOST=localhost
+          export DB_USER=postgres
+          export DB_PASSWORD="${POSTGRES_PASSWORD}"
+          export DB_NAME="${POSTGRES_DB}"
+          export DB_PORT=5432
+        else
+          export DB_TYPE=sqlite
+          export SQLITE_PATH="${SQLITE_PATH}"
+        fi
         
-        echo "Initializing database (${DB_TYPE})..."
+        echo "🔧 Initializing ${DB_TYPE} database..."
         npm run init-db
         
-        echo "Seeding test data..."
+        echo "🌱 Seeding test data for ${DB_TYPE}..."
         npm run seed-test-data
       env:
-        # 从全局环境继承
         MYSQL_ROOT_PASSWORD: ${{ env.MYSQL_ROOT_PASSWORD }}
         MYSQL_DATABASE: ${{ env.MYSQL_DATABASE }}
         POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
@@ -114,6 +113,14 @@ jobs:
       run: npm test
       env:
         NODE_ENV: test
+        # 传递数据库配置给测试套件
+        DB_TYPE: ${{ matrix.database-type }}
+        DB_HOST: ${{ matrix.database-type == 'mysql' && '127.0.0.1' || matrix.database-type == 'postgresql' && 'localhost' || '' }}
+        DB_USER: ${{ matrix.database-type == 'mysql' && 'root' || matrix.database-type == 'postgresql' && 'postgres' || '' }}
+        DB_PASSWORD: ${{ matrix.database-type == 'mysql' && env.MYSQL_ROOT_PASSWORD || matrix.database-type == 'postgresql' && env.POSTGRES_PASSWORD || '' }}
+        DB_NAME: ${{ matrix.database-type == 'mysql' && env.MYSQL_DATABASE || matrix.database-type == 'postgresql' && env.POSTGRES_DB || '' }}
+        DB_PORT: ${{ matrix.database-type == 'mysql' && '3306' || matrix.database-type == 'postgresql' && '5432' || '' }}
+        SQLITE_PATH: ${{ matrix.database-type == 'sqlite' && env.SQLITE_PATH || '' }}
 
   build:
     needs: test
@@ -121,15 +128,24 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        node-version: [18.x] # 构建使用稳定 LTS 版本
+        include:
+          - os: ubuntu-latest
+            artifact-name: linux
+            binary-name: guanwang1-backend-linux
+          - os: windows-latest
+            artifact-name: windows
+            binary-name: guanwang1-backend-win.exe
+          - os: macos-latest
+            artifact-name: macos
+            binary-name: guanwang1-backend-macos
     
     steps:
     - uses: actions/checkout@v4
     
-    - name: Setup Node.js ${{ matrix.node-version }}
+    - name: Setup Node.js 18.x
       uses: actions/setup-node@v4
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: '18.x'
         cache: 'npm'
     
     - name: Install dependencies
@@ -138,15 +154,15 @@ jobs:
     - name: Build executable
       run: npm run build
       env:
-        # pkg 需要指定目标平台
-        TARGET_PLATFORM: ${{ matrix.os == 'ubuntu-latest' && 'linux' || matrix.os == 'windows-latest' && 'win' || 'macos' }}
+        TARGET_PLATFORM: ${{ matrix.artifact-name }}
+        BINARY_NAME: ${{ matrix.binary-name }}
     
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: backend-dist-${{ matrix.os }}
+        name: backend-dist-${{ matrix.artifact-name }}
         path: |
-          dist/
+          dist/${{ matrix.binary-name }}
           !dist/**/*.map
           !dist/*.d.ts
 
@@ -155,26 +171,28 @@ jobs:
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     
+    permissions:
+      contents: write
+    
     steps:
     - uses: actions/checkout@v4
     
-    # 收集所有平台的构建产物
     - name: Download Linux artifacts
       uses: actions/download-artifact@v4
       with:
-        name: backend-dist-ubuntu-latest
+        name: backend-dist-linux
         path: dist/linux
     
     - name: Download Windows artifacts
       uses: actions/download-artifact@v4
       with:
-        name: backend-dist-windows-latest
+        name: backend-dist-windows
         path: dist/windows
     
     - name: Download macOS artifacts
       uses: actions/download-artifact@v4
       with:
-        name: backend-dist-macos-latest
+        name: backend-dist-macos
         path: dist/macos
     
     - name: Create Release
@@ -191,11 +209,3 @@ jobs:
           dist/linux/guanwang1-backend-linux
           dist/windows/guanwang1-backend-win.exe
           dist/macos/guanwang1-backend-macos
-
-    # 自动创建 CHANGELOG (可选增强)
-    - name: Generate changelog
-      uses: mikepenz/release-changelog-builder-action@v4
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        toTag: ${{ github.ref_name }}
