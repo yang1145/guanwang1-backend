@@ -53,11 +53,10 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
     
-    - name: Update lock file for optional dependencies
+    - name: Sync package-lock.json with package.json
       run: |
         npm install
-        npm install pg
-      if: matrix.database-type == 'postgresql'
+        npm install pg || true
     
     - name: Install dependencies
       run: npm ci
