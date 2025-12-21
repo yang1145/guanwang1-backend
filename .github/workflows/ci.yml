@@ -53,16 +53,12 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
     
-    - name: Sync package-lock.json with package.json
-      run: |
-        npm install
-    
-    - name: Install dependencies
-      run: npm ci
-      
     - name: Install pg package for PostgreSQL
       if: matrix.database-type == 'postgresql'
       run: npm install pg
+    
+    - name: Install dependencies
+      run: npm ci
     
     - name: Copy environment variables
       run: cp .env.example .env
