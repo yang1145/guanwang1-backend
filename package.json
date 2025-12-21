@@ -9,6 +9,7 @@
     "dev": "nodemon app.js",
     "init-db": "node config/initDb.js",
     "seed-test-data": "node scripts/seedTestData.js",
+    "test": "echo \"Error: no test specified\" && exit 0",
     "build": "pkg . --targets node18-win-x64,node18-linux-x64 --output dist/guanwang1-backend"
   },
   "dependencies": {

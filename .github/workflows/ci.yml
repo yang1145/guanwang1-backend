@@ -22,7 +22,7 @@ jobs:
     
     strategy:
       matrix:
-        node-version: [18.x, 20.x]
+        node-version: [18.x, 20.x, 22.x]
         database-type: [mysql, sqlite, postgresql]
     
     # 始终定义所有服务（GitHub Actions要求）
@@ -68,6 +68,10 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
         cache-dependency-path: package-lock.json
+    
+    - name: Install pg package for PostgreSQL
+      if: matrix.database-type == 'postgresql'
+      run: npm install pg
     
     - name: Install dependencies
       run: npm ci
