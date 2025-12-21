@@ -83,12 +83,21 @@ async function seedData() {
     console.log('正在插入产品数据...');
     for (const product of sampleProducts) {
       console.log('插入产品:', product);
-      const [result] = await db.query(
+      const result = await db.query(
         getProductQuery,
         [product.name, product.description, product.category, product.image_url]
       );
       
-      const insertId = dbType === 'postgresql' ? result.rows[0].id : result.insertId;
+      // 处理不同数据库的返回结果格式
+      let insertId;
+      if (dbType === 'postgresql') {
+        // PostgreSQL 返回数组，第一个元素包含 rows 属性
+        insertId = result[0].rows[0].id;
+      } else {
+        // MySQL/SQLite 返回数组，第一个元素包含 insertId 属性
+        insertId = result[0].insertId;
+      }
+      
       console.log(`已插入产品: ${product.name}, 插入ID: ${insertId}`);
     }
 
@@ -96,12 +105,21 @@ async function seedData() {
     console.log('正在插入新闻数据...');
     for (const news of sampleNews) {
       console.log('插入新闻:', news);
-      const [result] = await db.query(
+      const result = await db.query(
         getNewsQuery,
         [news.title, news.content, news.author, news.image_url]
       );
       
-      const insertId = dbType === 'postgresql' ? result.rows[0].id : result.insertId;
+      // 处理不同数据库的返回结果格式
+      let insertId;
+      if (dbType === 'postgresql') {
+        // PostgreSQL 返回数组，第一个元素包含 rows 属性
+        insertId = result[0].rows[0].id;
+      } else {
+        // MySQL/SQLite 返回数组，第一个元素包含 insertId 属性
+        insertId = result[0].insertId;
+      }
+      
       console.log(`已插入新闻: ${news.title}, 插入ID: ${insertId}`);
     }
 
