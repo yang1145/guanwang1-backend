@@ -92,10 +92,18 @@ async function seedData() {
       let insertId;
       if (dbType === 'postgresql') {
         // PostgreSQL 返回数组，第一个元素包含 rows 属性
-        insertId = result[0].rows[0].id;
+        if (result && result[0] && result[0].rows && result[0].rows[0]) {
+          insertId = result[0].rows[0].id;
+        } else {
+          insertId = 'unknown';
+        }
       } else {
         // MySQL/SQLite 返回数组，第一个元素包含 insertId 属性
-        insertId = result[0].insertId;
+        if (result && result[0]) {
+          insertId = result[0].insertId || 'unknown';
+        } else {
+          insertId = 'unknown';
+        }
       }
       
       console.log(`已插入产品: ${product.name}, 插入ID: ${insertId}`);
@@ -114,10 +122,18 @@ async function seedData() {
       let insertId;
       if (dbType === 'postgresql') {
         // PostgreSQL 返回数组，第一个元素包含 rows 属性
-        insertId = result[0].rows[0].id;
+        if (result && result[0] && result[0].rows && result[0].rows[0]) {
+          insertId = result[0].rows[0].id;
+        } else {
+          insertId = 'unknown';
+        }
       } else {
         // MySQL/SQLite 返回数组，第一个元素包含 insertId 属性
-        insertId = result[0].insertId;
+        if (result && result[0]) {
+          insertId = result[0].insertId || 'unknown';
+        } else {
+          insertId = 'unknown';
+        }
       }
       
       console.log(`已插入新闻: ${news.title}, 插入ID: ${insertId}`);
