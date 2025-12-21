@@ -1,6 +1,6 @@
 # 后端管理系统
 
-基于 Node.js + Express + MySQL 的后端管理系统，为科技企业官网提供 API 接口。
+基于 Node.js + Express + SQLite 的后端管理系统，为科技企业官网提供 API 接口。
 
 ## 项目结构
 
@@ -48,6 +48,21 @@ backend/
 npm install
 ```
 
+### 数据库驱动依赖（可选）
+
+本项目支持多种数据库，为了方便使用，默认使用 SQLite 数据库（通过 sql.js 实现，无需编译原生模块）。
+
+- SQLite支持（默认）：使用纯 JavaScript 实现的 `sql.js`，无需额外安装
+- MySQL支持：使用已包含的 `mysql2` 驱动
+- PostgreSQL支持：需要额外安装 `pg` 驱动
+
+如果您计划使用 PostgreSQL，请安装对应驱动：
+
+```bash
+# 安装PostgreSQL驱动（如果使用PostgreSQL）
+npm install pg
+```
+
 ## 构建可执行文件
 
 项目支持使用pkg工具构建跨平台可执行文件：
@@ -66,13 +81,66 @@ npm run build
 
 在可执行文件同目录下创建一个名为`.env`的文件，内容参考[.env.example](../.env.example)：
 
+#### SQLite配置示例（默认）：
 ```env
-# 数据库配置
+# 数据库类型配置（可选值：mysql, postgresql, sqlite，默认为sqlite）
+DB_TYPE=sqlite
+
+# SQLite数据库配置
+SQLITE_PATH=./database.db
+
+# 服务器配置
+PORT=3001
+
+# JWT密钥
+JWT_SECRET=your-secret-key-change-in-production
+```
+
+#### MySQL配置示例：
+```env
+# 数据库类型配置
+DB_TYPE=mysql
+
+# MySQL数据库配置
 DB_HOST=localhost
 DB_USER=root
 DB_PASSWORD=your_password
 DB_NAME=tech_company
 DB_PORT=3306
+
+# 服务器配置
+PORT=3001
+
+# JWT密钥
+JWT_SECRET=your-secret-key-change-in-production
+```
+
+#### PostgreSQL配置示例：
+```env
+# 数据库类型配置
+DB_TYPE=postgresql
+
+# PostgreSQL数据库配置
+POSTGRES_HOST=localhost
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=your_password
+POSTGRES_DB=tech_company
+POSTGRES_PORT=5432
+
+# 服务器配置
+PORT=3001
+
+# JWT密钥
+JWT_SECRET=your-secret-key-change-in-production
+```
+
+#### SQLite配置示例：
+```env
+# 数据库类型配置
+DB_TYPE=sqlite
+
+# SQLite数据库配置
+SQLITE_PATH=./database.db
 
 # 服务器配置
 PORT=3001
@@ -87,6 +155,7 @@ JWT_SECRET=your-secret-key-change-in-production
 
 Linux/macOS示例：
 ```bash
+export DB_TYPE=mysql
 export DB_HOST=localhost
 export DB_USER=root
 export DB_PASSWORD=your_password
@@ -96,6 +165,7 @@ export DB_PASSWORD=your_password
 
 Windows示例：
 ```cmd
+set DB_TYPE=mysql
 set DB_HOST=localhost
 set DB_USER=root
 set DB_PASSWORD=your_password
@@ -107,12 +177,12 @@ guanwang1-backend-win.exe
 
 Linux/macOS示例：
 ```bash
-DB_HOST=localhost DB_USER=root DB_PASSWORD=your_password ./guanwang1-backend-linux
+DB_TYPE=mysql DB_HOST=localhost DB_USER=root DB_PASSWORD=your_password ./guanwang1-backend-linux
 ```
 
 Windows示例：
 ```cmd
-set DB_HOST=localhost && set DB_USER=root && set DB_PASSWORD=your_password && guanwang1-backend-win.exe
+set DB_TYPE=mysql && set DB_HOST=localhost && set DB_USER=root && set DB_PASSWORD=your_password && guanwang1-backend-win.exe
 ```
 
 ## 使用 Docker 运行
@@ -203,7 +273,7 @@ docker exec -it <container_id> npm run init-db
 ## 环境配置
 
 1. 复制 [.env.example](../.env.example) 文件并重命名为 `.env`
-2. 根据实际情况修改配置参数
+2. 根据实际情况修改配置参数，包括数据库类型和相应配置
 
 ## 数据库初始化
 
