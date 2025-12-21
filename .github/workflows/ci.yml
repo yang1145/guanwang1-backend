@@ -2,151 +2,153 @@ name: Backend CI/CD
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
     tags:
       - 'v*'
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
+
+# 全局环境变量 - 避免重复定义
+env:
+  MYSQL_DATABASE: tech_company_test
+  MYSQL_ROOT_PASSWORD: rootpassword
+  POSTGRES_DB: tech_company_test
+  POSTGRES_PASSWORD: postgrespassword
+  SQLITE_PATH: ./test-database.db
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     
+    # 智能矩阵策略 - 按需启动服务
     strategy:
       matrix:
-        node-version: [18.x, 20.x, 22.x, 24.x]
+        node-version: [18.x, 20.x] # 移除 EOL 版本，保留 LTS
         database-type: [mysql, sqlite, postgresql]
+        include:
+          # 仅当需要时才包含服务配置
+          - database-type: mysql
+            service: mysql
+          - database-type: postgresql
+            service: postgres
     
+    # 按需启动服务 - 避免资源浪费
     services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: rootpassword
-          MYSQL_DATABASE: tech_company_test
+      ${{ matrix.service }}:
+        ${{ matrix.service == 'mysql' && 'image: mysql:8.0' || '' }}
+        ${{ matrix.service == 'postgres' && 'image: postgres:15' || '' }}
+        env: ${{ matrix.service == 'mysql' && '{ MYSQL_ROOT_PASSWORD: "${{ env.MYSQL_ROOT_PASSWORD }}", MYSQL_DATABASE: "${{ env.MYSQL_DATABASE }}" }' || 
+                matrix.service == 'postgres' && '{ POSTGRES_PASSWORD: "${{ env.POSTGRES_PASSWORD }}", POSTGRES_DB: "${{ env.POSTGRES_DB }}" }' || '{}' }}
         ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping"
+          - ${{ matrix.service == 'mysql' && '3306:3306' || '' }}
+          - ${{ matrix.service == 'postgres' && '5432:5432' || '' }}
+        options: ${{ matrix.service == 'mysql' && '>-
+          --health-cmd="mysqladmin ping -uroot -p${MYSQL_ROOT_PASSWORD}"
           --health-interval=10s
           --health-timeout=5s
-          --health-retries=3
-      
-      postgres:
-        image: postgres:13
-        env:
-          POSTGRES_PASSWORD: postgrespassword
-          POSTGRES_DB: tech_company_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-retries=5' || 
+                   matrix.service == 'postgres' && '>-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5' || '' }}
     
     steps:
     - uses: actions/checkout@v4
     
-    - name: Use Node.js ${{ matrix.node-version }}
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: package-lock.json
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Configure test environment
+      run: cp .env.example .env
+    
+    # 智能数据库初始化 - 单步骤处理所有数据库类型
+    - name: Initialize database & seed test data
+      run: |
+        # 设置数据库特定环境变量
+        case "${{ matrix.database-type }}" in
+          mysql)
+            export DB_TYPE=mysql
+            export DB_HOST=127.0.0.1
+            export DB_USER=root
+            export DB_PASSWORD="${MYSQL_ROOT_PASSWORD}"
+            export DB_NAME="${MYSQL_DATABASE}"
+            export DB_PORT=3306
+            ;;
+          postgresql)
+            export DB_TYPE=postgresql
+            export DB_HOST=localhost
+            export DB_USER=postgres
+            export DB_PASSWORD="${POSTGRES_PASSWORD}"
+            export DB_NAME="${POSTGRES_DB}"
+            export DB_PORT=5432
+            ;;
+          sqlite)
+            export DB_TYPE=sqlite
+            export SQLITE_PATH="${{ env.SQLITE_PATH }}"
+            ;;
+        esac
+        
+        echo "Initializing database (${DB_TYPE})..."
+        npm run init-db
+        
+        echo "Seeding test data..."
+        npm run seed-test-data
+      env:
+        # 从全局环境继承
+        MYSQL_ROOT_PASSWORD: ${{ env.MYSQL_ROOT_PASSWORD }}
+        MYSQL_DATABASE: ${{ env.MYSQL_DATABASE }}
+        POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+        POSTGRES_DB: ${{ env.POSTGRES_DB }}
+        SQLITE_PATH: ${{ env.SQLITE_PATH }}
+    
+    - name: Run tests
+      run: npm test
+      env:
+        NODE_ENV: test
+
+  build:
+    needs: test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node-version: [18.x] # 构建使用稳定 LTS 版本
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
     
-    - name: Install pg package for PostgreSQL
-      if: matrix.database-type == 'postgresql'
-      run: npm install pg
-    
     - name: Install dependencies
       run: npm ci
     
-    - name: Copy environment variables
-      run: cp .env.example .env
-    
-    - name: Run database initialization for MySQL
-      if: matrix.database-type == 'mysql'
-      run: npm run init-db
-      env:
-        DB_TYPE: mysql
-        DB_HOST: 127.0.0.1
-        DB_USER: root
-        DB_PASSWORD: rootpassword
-        DB_NAME: tech_company_test
-        DB_PORT: 3306
-    
-    - name: Run database initialization for SQLite
-      if: matrix.database-type == 'sqlite'
-      run: npm run init-db
-      env:
-        DB_TYPE: sqlite
-        SQLITE_PATH: ./test-database.db
-    
-    - name: Run database initialization for PostgreSQL
-      if: matrix.database-type == 'postgresql'
-      run: npm run init-db
-      env:
-        DB_TYPE: postgresql
-        POSTGRES_HOST: localhost
-        POSTGRES_USER: postgres
-        POSTGRES_PASSWORD: postgrespassword
-        POSTGRES_DB: tech_company_test
-        POSTGRES_PORT: 5432
-    
-    - name: Seed test data for MySQL
-      if: matrix.database-type == 'mysql'
-      run: npm run seed-test-data
-      env:
-        DB_TYPE: mysql
-        DB_HOST: 127.0.0.1
-        DB_USER: root
-        DB_PASSWORD: rootpassword
-        DB_NAME: tech_company_test
-        DB_PORT: 3306
-    
-    - name: Seed test data for SQLite
-      if: matrix.database-type == 'sqlite'
-      run: npm run seed-test-data
-      env:
-        DB_TYPE: sqlite
-        SQLITE_PATH: ./test-database.db
-
-    - name: Seed test data for PostgreSQL
-      if: matrix.database-type == 'postgresql'
-      run: npm run seed-test-data
-      env:
-        DB_TYPE: postgresql
-        POSTGRES_HOST: localhost
-        POSTGRES_USER: postgres
-        POSTGRES_PASSWORD: postgrespassword
-        POSTGRES_DB: tech_company_test
-        POSTGRES_PORT: 5432
-
-  build:
-    needs: test
-    runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Use Node.js 18.x
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18.x'
-        cache: 'npm'
-        
-    - name: Install dependencies
-      run: npm ci
-      
-    - name: Build application with pkg
+    - name: Build executable
       run: npm run build
-      
-    - name: Archive production artifacts
+      env:
+        # pkg 需要指定目标平台
+        TARGET_PLATFORM: ${{ matrix.os == 'ubuntu-latest' && 'linux' || matrix.os == 'windows-latest' && 'win' || 'macos' }}
+    
+    - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: backend-dist
+        name: backend-dist-${{ matrix.os }}
         path: |
           dist/
           !dist/**/*.map
+          !dist/*.d.ts
 
   release:
     needs: build
@@ -156,39 +158,44 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Download artifact
+    # 收集所有平台的构建产物
+    - name: Download Linux artifacts
       uses: actions/download-artifact@v4
       with:
-        name: backend-dist
-        path: dist
-        
+        name: backend-dist-ubuntu-latest
+        path: dist/linux
+    
+    - name: Download Windows artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: backend-dist-windows-latest
+        path: dist/windows
+    
+    - name: Download macOS artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: backend-dist-macos-latest
+        path: dist/macos
+    
     - name: Create Release
       id: create_release
-      uses: actions/create-release@v1
+      uses: softprops/action-gh-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
+        tag_name: ${{ github.ref_name }}
+        name: Release ${{ github.ref_name }}
         draft: false
         prerelease: false
-        
-    - name: Upload Release Assets (Windows)
-      uses: actions/upload-release-asset@v1
+        files: |
+          dist/linux/guanwang1-backend-linux
+          dist/windows/guanwang1-backend-win.exe
+          dist/macos/guanwang1-backend-macos
+
+    # 自动创建 CHANGELOG (可选增强)
+    - name: Generate changelog
+      uses: mikepenz/release-changelog-builder-action@v4
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./dist/guanwang1-backend-win.exe
-        asset_name: guanwang1-backend-win.exe
-        asset_content_type: application/octet-stream
-        
-    - name: Upload Release Assets (Linux)
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./dist/guanwang1-backend-linux
-        asset_name: guanwang1-backend-linux
-        asset_content_type: application/octet-stream
+        toTag: ${{ github.ref_name }}
