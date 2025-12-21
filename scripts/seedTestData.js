@@ -2,7 +2,6 @@
 
 require('dotenv').config();
 const db = require('../config/db');
-const dbModule = require('../config/db.js');
 
 // 虚拟云产品数据
 const sampleProducts = [
@@ -60,18 +59,8 @@ const sampleNews = [
   }
 ];
 
-async function closeDatabaseConnection() {
-  try {
-    // 通过反射获取数据库实例并关闭连接池
-    const dbInstance = await require('../config/db');
-    if (dbInstance && typeof dbInstance.end === 'function') {
-      await dbInstance.end();
-      console.log('数据库连接已关闭');
-    }
-  } catch (error) {
-    console.warn('警告：关闭数据库连接时出现问题（可以忽略）', error.message);
-  }
-}
+// 不再需要单独的 closeDatabaseConnection 函数，
+// 因为我们将直接使用导入的 db 实例，并在最后调用 end。
 
 async function seedData() {
   try {
@@ -118,23 +107,33 @@ const timeout = setTimeout(() => {
 seedData().then(async (success) => {
   // 清除超时定时器
   clearTimeout(timeout);
-  
-  // 关闭数据库连接
-  await closeDatabaseConnection();
-  
+
+  // 正确关闭数据库连接池
+  if (db && typeof db.end === 'function') {
+    await db.end().catch(err => {
+      console.warn('关闭数据库连接时出错:', err.message);
+    });
+    console.log('数据库连接已关闭');
+  }
+
   if (success) {
     console.log('脚本执行成功完成');
-    process.exit(0);
   } else {
     console.error('脚本执行失败');
-    process.exit(1);
   }
+
+  // 强制退出以确保 CI 环境下进程终止
+  process.exit(success ? 0 : 1);
 }).catch(async (error) => {
   clearTimeout(timeout);
   console.error('严重错误:', error);
-  
-  // 关闭数据库连接
-  await closeDatabaseConnection();
-  
+
+  // 尝试关闭数据库连接
+  if (db && typeof db.end === 'function') {
+    await db.end().catch(err => {
+      console.warn('关闭数据库连接时出错:', err.message);
+    });
+  }
+
   process.exit(1);
 });
