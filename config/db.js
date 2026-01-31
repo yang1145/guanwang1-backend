@@ -49,51 +49,53 @@ async function initDb() {
         sqlDb.query = function(sql, params = []) {
           return new Promise((resolve, reject) => {
             try {
-              // 替换 ? 占位符为 SQLite 的 $1, $2 等格式
-              let processedSql = sql;
-              for (let i = 0; i < params.length; i++) {
-                // 注意：sql.js 不直接支持 ? 占位符，我们需要自己处理
-                // 这里我们做一个简化的处理，实际项目中可能需要更复杂的参数处理
-                if (typeof params[i] === 'string') {
-                  processedSql = processedSql.replace('?', `'${params[i].replace(/'/g, "''")}'`);
-                } else if (params[i] === null || params[i] === undefined) {
-                  processedSql = processedSql.replace('?', 'NULL');
-                } else {
-                  processedSql = processedSql.replace('?', params[i]);
-                }
+              // 使用 sql.js 的 prepare + bind 方式处理参数化查询
+              // 这样更安全且不会出现字符串替换的问题
+              const stmt = this.prepare(sql);
+              
+              // 绑定参数
+              if (params && params.length > 0) {
+                stmt.bind(params);
               }
               
-              if (processedSql.trim().toLowerCase().startsWith('select')) {
+              const sqlLower = sql.trim().toLowerCase();
+              
+              if (sqlLower.startsWith('select')) {
                 // SELECT 查询返回行数据
-                const allResults = this.exec(processedSql);
-                if (allResults.length > 0) {
-                  const stmtResult = allResults[0];
-                  const rows = [];
-                  for (const row of stmtResult.values) {
-                    const obj = {};
-                    for (let i = 0; i < stmtResult.columns.length; i++) {
-                      obj[stmtResult.columns[i]] = row[i];
-                    }
-                    rows.push(obj);
-                  }
-                  resolve([rows]);
-                } else {
-                  resolve([[]]);
+                const rows = [];
+                while (stmt.step()) {
+                  rows.push(stmt.getAsObject());
                 }
+                stmt.free();
+                resolve([rows]);
               } else {
                 // 其他操作（INSERT, UPDATE, DELETE等）
-                this.run(processedSql);
+                stmt.step();
+                stmt.free();
+                
                 // 尝试获取最后插入的ID
                 let insertId = 0;
-                try {
-                  const lastIdResult = this.exec("SELECT last_insert_rowid();");
-                  if (lastIdResult.length > 0 && lastIdResult[0].values.length > 0) {
-                    insertId = lastIdResult[0].values[0][0];
+                if (sqlLower.startsWith('insert')) {
+                  try {
+                    const lastIdStmt = this.prepare("SELECT last_insert_rowid() as id;");
+                    lastIdStmt.step();
+                    const result = lastIdStmt.getAsObject();
+                    insertId = result.id || 0;
+                    lastIdStmt.free();
+                  } catch (e) {
+                    // 如果无法获取insertId，就设为0
                   }
-                } catch (e) {
-                  // 如果无法获取insertId，就设为0
                 }
-                resolve([{ affectedRows: 0, insertId: insertId }]);
+                
+                // 保存数据库到文件
+                try {
+                  const data = this.export();
+                  fs.writeFileSync(dbPath, data);
+                } catch (e) {
+                  console.warn('保存数据库文件失败:', e.message);
+                }
+                
+                resolve([{ affectedRows: this.getRowsModified(), insertId: insertId }]);
               }
             } catch (error) {
               reject(error);
@@ -105,6 +107,11 @@ async function initDb() {
         sqlDb.saveToFile = function(filePath) {
           const data = this.export();
           fs.writeFileSync(filePath, data);
+        };
+        
+        // 添加 end 方法以兼容连接池接口
+        sqlDb.end = function() {
+          return Promise.resolve();
         };
         
         db = sqlDb;
@@ -146,12 +153,19 @@ const dbPromise = initDb();
 // 导出一个包装器，确保在使用前数据库已初始化
 module.exports = new Proxy({}, {
   get: function(target, prop) {
+    // 对于特殊属性，返回一个 Promise 包装的函数
+    if (prop === 'then' || prop === 'catch') {
+      // 避免被当作 Promise 处理
+      return undefined;
+    }
+    
     return function(...args) {
       return dbPromise.then(db => {
-        if (typeof db[prop] === 'function') {
-          return db[prop](...args);
+        const value = db[prop];
+        if (typeof value === 'function') {
+          return value.apply(db, args);
         } else {
-          return db[prop];
+          return value;
         }
       });
     };

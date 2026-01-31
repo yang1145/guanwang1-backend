@@ -74,9 +74,30 @@ async function initConnection() {
           return new Promise((resolve, reject) => {
             try {
               const stmt = this.prepare(sql);
-              stmt.run(params);
+              
+              // 绑定参数
+              if (params && params.length > 0) {
+                stmt.bind(params);
+              }
+              
+              // 执行语句
+              stmt.step();
+              stmt.free();
+              
               // 获取最后插入的ID和影响行数
-              const insertId = this.lastInsertRowid ? this.lastInsertRowid() : 0;
+              let insertId = 0;
+              if (sql.trim().toLowerCase().startsWith('insert')) {
+                try {
+                  const lastIdStmt = this.prepare("SELECT last_insert_rowid() as id;");
+                  lastIdStmt.step();
+                  const result = lastIdStmt.getAsObject();
+                  insertId = result.id || 0;
+                  lastIdStmt.free();
+                } catch (e) {
+                  // 如果无法获取insertId，就设为0
+                }
+              }
+              
               const changes = this.getRowsModified ? this.getRowsModified() : 0;
               resolve({ 
                 affectedRows: changes, 
@@ -92,29 +113,20 @@ async function initConnection() {
           return new Promise((resolve, reject) => {
             try {
               const stmt = this.prepare(sql);
-              const result = stmt.getAsObject(params);
               
-              if (sql.trim().toLowerCase().startsWith('select')) {
-                // 对于 SELECT 查询，我们需要获取所有行
-                const rows = [];
-                const columnNames = stmt.getColumnNames();
-                
-                // 重新执行查询以获取所有结果
-                const allResults = this.exec(sql);
-                if (allResults.length > 0) {
-                  const stmtResult = allResults[0];
-                  for (const row of stmtResult.values) {
-                    const obj = {};
-                    for (let i = 0; i < stmtResult.columns.length; i++) {
-                      obj[stmtResult.columns[i]] = row[i];
-                    }
-                    rows.push(obj);
-                  }
-                }
-                resolve(rows);
-              } else {
-                resolve([]);
+              // 绑定参数
+              if (params && params.length > 0) {
+                stmt.bind(params);
               }
+              
+              // 获取所有行
+              const rows = [];
+              while (stmt.step()) {
+                rows.push(stmt.getAsObject());
+              }
+              stmt.free();
+              
+              resolve(rows);
             } catch (error) {
               reject(error);
             }
