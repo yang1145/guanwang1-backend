@@ -177,16 +177,10 @@ const deleteCategory = async (req, res) => {
   try {
     const { id } = req.params;
     
-    // 检查分类是否存在
-    const existingCategory = await Category.getById(id);
-    if (!existingCategory) {
-      return res.status(404).json({ error: '未找到该分类' });
-    }
-    
     const result = await Category.delete(id);
     
     if (result === 0) {
-      return res.status(400).json({ error: '删除分类失败' });
+      return res.status(404).json({ error: '未找到该分类' });
     }
     
     res.json({

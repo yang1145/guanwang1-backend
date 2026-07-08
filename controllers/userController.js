@@ -205,16 +205,10 @@ const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
     
-    // 检查用户是否存在
-    const existingUser = await User.getById(id);
-    if (!existingUser) {
-      return res.status(404).json({ error: '用户不存在' });
-    }
-    
     const result = await User.delete(id);
     
     if (result === 0) {
-      return res.status(400).json({ error: '删除用户失败' });
+      return res.status(404).json({ error: '用户不存在' });
     }
     
     res.json({

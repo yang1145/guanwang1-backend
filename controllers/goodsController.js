@@ -101,16 +101,10 @@ const deleteGoods = async (req, res) => {
   try {
     const { id } = req.params;
     
-    // 检查商品是否存在
-    const existingGoods = await Goods.getById(id);
-    if (!existingGoods) {
-      return res.status(404).json({ error: '未找到该商品' });
-    }
-    
     const result = await Goods.delete(id);
     
     if (result === 0) {
-      return res.status(400).json({ error: '删除商品失败' });
+      return res.status(404).json({ error: '未找到该商品' });
     }
     
     res.json({

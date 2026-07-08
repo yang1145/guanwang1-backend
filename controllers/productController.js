@@ -90,16 +90,10 @@ const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
     
-    // 检查产品是否存在
-    const existingProduct = await Product.getById(id);
-    if (!existingProduct) {
-      return res.status(404).json({ error: '未找到该产品' });
-    }
-    
     const result = await Product.delete(id);
     
     if (result === 0) {
-      return res.status(400).json({ error: '删除产品失败' });
+      return res.status(404).json({ error: '未找到该产品' });
     }
     
     res.json({

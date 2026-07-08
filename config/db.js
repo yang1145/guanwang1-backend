@@ -71,6 +71,10 @@ async function initDb() {
               } else {
                 // 其他操作（INSERT, UPDATE, DELETE等）
                 stmt.step();
+                
+                // 在释放 statement 之前获取受影响的行数
+                const affectedRows = this.getRowsModified();
+                
                 stmt.free();
                 
                 // 尝试获取最后插入的ID
@@ -95,7 +99,7 @@ async function initDb() {
                   console.warn('保存数据库文件失败:', e.message);
                 }
                 
-                resolve([{ affectedRows: this.getRowsModified(), insertId: insertId }]);
+                resolve([{ affectedRows: affectedRows, insertId: insertId }]);
               }
             } catch (error) {
               reject(error);

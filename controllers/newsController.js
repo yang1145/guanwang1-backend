@@ -111,16 +111,10 @@ const deleteNews = async (req, res) => {
   try {
     const { id } = req.params;
     
-    // 检查新闻是否存在
-    const existingNews = await News.getById(id);
-    if (!existingNews) {
-      return res.status(404).json({ error: '未找到该新闻' });
-    }
-    
     const result = await News.delete(id);
     
     if (result === 0) {
-      return res.status(400).json({ error: '删除新闻失败' });
+      return res.status(404).json({ error: '未找到该新闻' });
     }
     
     res.json({
