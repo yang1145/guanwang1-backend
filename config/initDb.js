@@ -311,6 +311,72 @@ const initDb = async () => {
           )
         `);
         
+        // 创建 AI 配置表
+        await connection.query(`
+          CREATE TABLE IF NOT EXISTS ai_config (
+            id SERIAL PRIMARY KEY,
+            provider VARCHAR(50) NOT NULL DEFAULT 'openai',
+            api_key VARCHAR(255),
+            api_base_url VARCHAR(255) NOT NULL DEFAULT 'https://api.openai.com/v1',
+            model VARCHAR(100) NOT NULL DEFAULT 'gpt-3.5-turbo',
+            system_prompt TEXT,
+            max_context_messages INTEGER DEFAULT 10,
+            daily_global_limit INTEGER DEFAULT 100,
+            retention_days INTEGER DEFAULT 30,
+            enabled INTEGER DEFAULT 1,
+            guest_allowed INTEGER DEFAULT 1,
+            guest_daily_limit INTEGER DEFAULT 20,
+            default_daily_limit INTEGER DEFAULT 50,
+            default_monthly_limit INTEGER DEFAULT 500,
+            default_total_limit INTEGER DEFAULT 0,
+            temperature REAL DEFAULT 0.7,
+            max_tokens INTEGER DEFAULT 2048,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          )
+        `);
+        
+        // 创建 AI 聊天会话表
+        await connection.query(`
+          CREATE TABLE IF NOT EXISTS ai_chat_sessions (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL,
+            title VARCHAR(255),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          )
+        `);
+        
+        // 创建 AI 聊天消息表
+        await connection.query(`
+          CREATE TABLE IF NOT EXISTS ai_chat_messages (
+            id SERIAL PRIMARY KEY,
+            session_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            role VARCHAR(20) NOT NULL,
+            content TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          )
+        `);
+        
+        // 创建 AI 用户配额表
+        await connection.query(`
+          CREATE TABLE IF NOT EXISTS ai_user_quotas (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL UNIQUE,
+            daily_limit INTEGER DEFAULT 50,
+            monthly_limit INTEGER DEFAULT 500,
+            total_limit INTEGER DEFAULT 0,
+            used_today INTEGER DEFAULT 0,
+            used_month INTEGER DEFAULT 0,
+            used_total INTEGER DEFAULT 0,
+            last_reset_date VARCHAR(10),
+            last_reset_month VARCHAR(7),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          )
+        `);
+        
         break;
 
       case 'sqlite':
@@ -413,6 +479,72 @@ const initDb = async () => {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL UNIQUE,
             description TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+          )
+        `);
+        
+        // 创建 AI 配置表
+        await connection.asyncRun(`
+          CREATE TABLE IF NOT EXISTS ai_config (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            provider TEXT NOT NULL DEFAULT 'openai',
+            api_key TEXT,
+            api_base_url TEXT NOT NULL DEFAULT 'https://api.openai.com/v1',
+            model TEXT NOT NULL DEFAULT 'gpt-3.5-turbo',
+            system_prompt TEXT,
+            max_context_messages INTEGER DEFAULT 10,
+            daily_global_limit INTEGER DEFAULT 100,
+            retention_days INTEGER DEFAULT 30,
+            enabled INTEGER DEFAULT 1,
+            guest_allowed INTEGER DEFAULT 1,
+            guest_daily_limit INTEGER DEFAULT 20,
+            default_daily_limit INTEGER DEFAULT 50,
+            default_monthly_limit INTEGER DEFAULT 500,
+            default_total_limit INTEGER DEFAULT 0,
+            temperature REAL DEFAULT 0.7,
+            max_tokens INTEGER DEFAULT 2048,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+          )
+        `);
+        
+        // 创建 AI 聊天会话表
+        await connection.asyncRun(`
+          CREATE TABLE IF NOT EXISTS ai_chat_sessions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            title TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+          )
+        `);
+        
+        // 创建 AI 聊天消息表
+        await connection.asyncRun(`
+          CREATE TABLE IF NOT EXISTS ai_chat_messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            role TEXT NOT NULL,
+            content TEXT NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+          )
+        `);
+        
+        // 创建 AI 用户配额表
+        await connection.asyncRun(`
+          CREATE TABLE IF NOT EXISTS ai_user_quotas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL UNIQUE,
+            daily_limit INTEGER DEFAULT 50,
+            monthly_limit INTEGER DEFAULT 500,
+            total_limit INTEGER DEFAULT 0,
+            used_today INTEGER DEFAULT 0,
+            used_month INTEGER DEFAULT 0,
+            used_total INTEGER DEFAULT 0,
+            last_reset_date TEXT,
+            last_reset_month TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
           )
@@ -526,6 +658,70 @@ const initDb = async () => {
           )
         `);
         
+        // 创建 AI 配置表
+        await connection.execute(`
+          CREATE TABLE IF NOT EXISTS ai_config (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            provider VARCHAR(50) NOT NULL DEFAULT 'openai',
+            api_key VARCHAR(255),
+            api_base_url VARCHAR(255) NOT NULL DEFAULT 'https://api.openai.com/v1',
+            model VARCHAR(100) NOT NULL DEFAULT 'gpt-3.5-turbo',
+            system_prompt TEXT,
+            max_context_messages INT DEFAULT 10,
+            daily_global_limit INT DEFAULT 100,
+            retention_days INT DEFAULT 30,
+            enabled INT DEFAULT 1,
+            default_daily_limit INT DEFAULT 50,
+            default_monthly_limit INT DEFAULT 500,
+            default_total_limit INT DEFAULT 0,
+            temperature FLOAT DEFAULT 0.7,
+            max_tokens INT DEFAULT 2048,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+          )
+        `);
+        
+        // 创建 AI 聊天会话表
+        await connection.execute(`
+          CREATE TABLE IF NOT EXISTS ai_chat_sessions (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            title VARCHAR(255),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+          )
+        `);
+        
+        // 创建 AI 聊天消息表
+        await connection.execute(`
+          CREATE TABLE IF NOT EXISTS ai_chat_messages (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            session_id INT NOT NULL,
+            user_id INT NOT NULL,
+            role VARCHAR(20) NOT NULL,
+            content TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          )
+        `);
+        
+        // 创建 AI 用户配额表
+        await connection.execute(`
+          CREATE TABLE IF NOT EXISTS ai_user_quotas (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL UNIQUE,
+            daily_limit INT DEFAULT 50,
+            monthly_limit INT DEFAULT 500,
+            total_limit INT DEFAULT 0,
+            used_today INT DEFAULT 0,
+            used_month INT DEFAULT 0,
+            used_total INT DEFAULT 0,
+            last_reset_date VARCHAR(10),
+            last_reset_month VARCHAR(7),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+          )
+        `);
+        
         break;
     }
 
@@ -557,6 +753,14 @@ const initDb = async () => {
           VALUES ($1, $2, $3)
           ON CONFLICT DO NOTHING
         `, ['默认公司名称', 'https://www.example.com', '默认网站标题']);
+        
+        // 插入默认 AI 配置
+        await connection.query(`
+          INSERT INTO ai_config 
+          (id, provider, api_base_url, model, system_prompt, max_context_messages, daily_global_limit, retention_days, enabled, guest_allowed, guest_daily_limit, default_daily_limit, default_monthly_limit, default_total_limit, temperature, max_tokens) 
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+          ON CONFLICT (id) DO NOTHING
+        `, [1, 'openai', 'https://api.openai.com/v1', 'gpt-3.5-turbo', '你是一个 helpful 的助手。', 10, 100, 30, 1, 1, 20, 50, 500, 0, 0.7, 2048]);
         break;
 
       case 'sqlite':
@@ -572,6 +776,13 @@ const initDb = async () => {
           (company_name, site_url, site_title) 
           VALUES (?, ?, ?)
         `, ['默认公司名称', 'https://www.example.com', '默认网站标题']);
+        
+        // 插入默认 AI 配置
+        await connection.asyncRun(`
+          INSERT OR IGNORE INTO ai_config 
+          (id, provider, api_base_url, model, system_prompt, max_context_messages, daily_global_limit, retention_days, enabled, guest_allowed, guest_daily_limit, default_daily_limit, default_monthly_limit, default_total_limit, temperature, max_tokens) 
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, [1, 'openai', 'https://api.openai.com/v1', 'gpt-3.5-turbo', '你是一个 helpful 的助手。', 10, 100, 30, 1, 1, 20, 50, 500, 0, 0.7, 2048]);
         break;
 
       case 'mysql':
@@ -587,11 +798,19 @@ const initDb = async () => {
           (company_name, site_url, site_title) 
           VALUES (?, ?, ?)
         `, ['默认公司名称', 'https://www.example.com', '默认网站标题']);
+        
+        // 插入默认 AI 配置
+        await connection.execute(`
+          INSERT IGNORE INTO ai_config 
+          (id, provider, api_base_url, model, system_prompt, max_context_messages, daily_global_limit, retention_days, enabled, guest_allowed, guest_daily_limit, default_daily_limit, default_monthly_limit, default_total_limit, temperature, max_tokens) 
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, [1, 'openai', 'https://api.openai.com/v1', 'gpt-3.5-turbo', '你是一个 helpful 的助手。', 10, 100, 30, 1, 1, 20, 50, 500, 0, 0.7, 2048]);
         break;
     }
     
     console.log('默认管理员账户已创建或已存在');
     console.log('默认网站配置已创建或已存在');
+    console.log('默认 AI 配置已创建或已存在');
     console.log('数据库表创建成功');
   } catch (error) {
     console.error('创建数据库表时出错: ' + error.message);

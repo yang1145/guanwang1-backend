@@ -12,9 +12,13 @@ const userRoutes = require('./routes/users');
 const siteConfigRoutes = require('./routes/siteConfig');
 const goodsRoutes = require('./routes/goods');
 const categoryRoutes = require('./routes/categories');
+const aiChatRoutes = require('./routes/aiChat');
 
 // 模型导入
 const Admin = require('./models/Admin');
+const AiConfig = require('./models/AiConfig');
+const AiChatSession = require('./models/AiChatSession');
+const AiChatMessage = require('./models/AiChatMessage');
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -45,6 +49,7 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/site-config', siteConfigRoutes);
 app.use('/api/goods', goodsRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/ai-chat', aiChatRoutes);
 
 // 只有在非Docker环境中才处理前端路由
 if (!process.env.IS_DOCKER) {
@@ -53,6 +58,25 @@ if (!process.env.IS_DOCKER) {
     res.sendFile(path.join(__dirname, '../dist/index.html'));
   });
 }
+
+// AI 聊天记录自动清理任务
+async function cleanupAiChatHistory() {
+  try {
+    const config = await AiConfig.get();
+    if (!config || !config.retention_days) return;
+
+    const deletedMessages = await AiChatMessage.deleteOlderThan(config.retention_days);
+    const deletedSessions = await AiChatSession.deleteEmptyOlderThan(config.retention_days);
+
+    console.log(`AI 聊天记录清理完成: 删除 ${deletedMessages} 条消息, ${deletedSessions} 个空会话`);
+  } catch (err) {
+    console.error('AI 聊天记录清理失败:', err);
+  }
+}
+
+// 启动时执行一次，之后每 24 小时执行一次
+cleanupAiChatHistory();
+setInterval(cleanupAiChatHistory, 24 * 60 * 60 * 1000);
 
 // 启动服务器
 app.listen(port, () => {
