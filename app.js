@@ -13,6 +13,12 @@ const siteConfigRoutes = require('./routes/siteConfig');
 const goodsRoutes = require('./routes/goods');
 const categoryRoutes = require('./routes/categories');
 const aiChatRoutes = require('./routes/aiChat');
+const adminAccountRoutes = require('./routes/adminAccounts');
+const adminRoleRoutes = require('./routes/adminRoles');
+const adminPermissionRoutes = require('./routes/adminPermissions');
+const ticketRoutes = require('./routes/tickets');
+const ticketAdminRoutes = require('./routes/ticketAdmin');
+const ticketDepartmentRoutes = require('./routes/ticketDepartments');
 
 // 模型导入
 const Admin = require('./models/Admin');
@@ -39,6 +45,14 @@ app.get('/api', (req, res) => {
 
 // 管理员路由
 app.use('/api/admin', adminRoutes);
+app.use('/api/admin/accounts', adminAccountRoutes);
+app.use('/api/admin/roles', adminRoleRoutes);
+app.use('/api/admin/permissions', adminPermissionRoutes);
+app.use('/api/admin/tickets', ticketAdminRoutes);
+app.use('/api/admin/ticket-departments', ticketDepartmentRoutes);
+
+// 工单路由（用户端）
+app.use('/api/tickets', ticketRoutes);
 
 // 用户路由
 app.use('/api/users', userRoutes);

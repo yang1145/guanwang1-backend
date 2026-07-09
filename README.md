@@ -14,8 +14,11 @@ backend/
 ├── Dockerfile            # Docker镜像构建文件
 ├── docker-compose.yml    # Docker Compose配置文件
 ├── config/                # 配置文件
-│   ├── db.js             # 数据库配置
-│   └── initDb.js         # 数据库初始化脚本
+│   ├── db.js             # 数据库适配器
+│   ├── initDb.js         # 数据库初始化入口（92行）
+│   └── db/               # 初始化子脚本
+│       ├── tables.js     # DDL 建表
+│       └── seed.js       # 种子数据
 ├── controllers/           # 控制器
 │   ├── contactController.js
 │   ├── newsController.js
@@ -224,52 +227,6 @@ docker run -p 3001:3001 --env-file .env guanwang1-backend
 docker exec -it <container_id> npm run init-db
 ```
 
-## API 接口
-
-### 产品相关接口
-
-- `GET /api/products` - 获取所有产品（支持分类筛选）
-- `GET /api/products/:id` - 获取特定产品详情
-- `POST /api/products` - 创建新产品
-- `PUT /api/products/:id` - 更新产品
-- `DELETE /api/products/:id` - 删除产品
-
-### 新闻相关接口
-
-- `GET /api/news` - 获取所有新闻（支持分页）
-- `GET /api/news/:id` - 获取特定新闻详情
-- `GET /api/news/popular` - 获取热门新闻
-- `POST /api/news` - 创建新闻
-- `PUT /api/news/:id` - 更新新闻
-- `DELETE /api/news/:id` - 删除新闻
-
-### 联系表单接口
-
-- `POST /api/contact` - 提交联系表单
-- `GET /api/contact` - 获取所有联系信息（管理接口）
-- `GET /api/contact/:id` - 获取特定联系信息（管理接口）
-
-### 用户管理接口
-
-- `GET /api/users` - 获取所有用户列表（管理接口）
-- `GET /api/users/:id` - 获取特定用户信息（管理接口）
-- `PUT /api/users/:id` - 更新用户信息（管理接口）
-- `DELETE /api/users/:id` - 删除用户（管理接口）
-- `GET /api/users/count` - 获取用户总数（管理接口）
-
-### 商品管理接口
-
-- `GET /api/goods` - 获取所有商品（支持分类筛选）
-- `GET /api/goods/:id` - 获取特定商品详情
-- `POST /api/goods` - 创建新商品
-- `PUT /api/goods/:id` - 更新商品
-- `DELETE /api/goods/:id` - 删除商品
-
-### 网站管理接口
-
-- `GET /api/site-config` - 获取网站配置信息
-- `PUT /api/site-config` - 更新网站配置信息（管理接口）
-
 ## 环境配置
 
 1. 复制 [.env.example](../.env.example) 文件并重命名为 `.env`
@@ -304,3 +261,18 @@ npm run dev
 ```bash
 npm start
 ```
+
+## API 文档
+
+详见 [docs/API.md](docs/API.md) 文档索引，按功能分类：
+
+| 模块 | 文档 |
+|------|------|
+| 用户 | [docs/API_USERS.md](docs/API_USERS.md) |
+| 产品 | [docs/API_PRODUCTS.md](docs/API_PRODUCTS.md) |
+| 商品 | [docs/API_GOODS.md](docs/API_GOODS.md) |
+| 新闻 | [docs/API_NEWS.md](docs/API_NEWS.md) |
+| 联系我们 | [docs/API_CONTACT.md](docs/API_CONTACT.md) |
+| 网站配置 & 分类 | [docs/API_SITE.md](docs/API_SITE.md) |
+| 认证 & 权限 | [docs/API_AUTH.md](docs/API_AUTH.md) |
+| 工单系统 | [docs/API_TICKET.md](docs/API_TICKET.md) |
